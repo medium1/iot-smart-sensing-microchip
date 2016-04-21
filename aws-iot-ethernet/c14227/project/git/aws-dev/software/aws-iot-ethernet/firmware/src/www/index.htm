@@ -1,0 +1,70 @@
+~inc:header.inc~
+			<div id="title">
+				<h2>
+					ECM Development Kit Configuration Webpage
+				</h2>
+				<span id="hello">
+				&nbsp;
+				</span>
+			</div>
+			<div class="rounded_container" id="network_config">
+				<table>
+					<tr>
+						<td>Project MQTT ID:</td>
+						<td>
+							<input id="_project_mqtt_id" type="text" name="_project_mqtt_id" maxlength="255" class="ssid1" value="">
+						</td>
+					</tr>
+					<tr>
+						<td>User MQTT ID:</td>
+						<td>
+							<input id="_user_mqtt_id" type="text" name="_user_mqtt_id" maxlength="255" class="ssid1" value="">
+						</td>
+					</tr>
+					<tr>
+						<td>API Key:</td>
+						<td>
+							<input id="_api_key" type="text" name="_api_key" maxlength="255" class="ssid1" value="">
+						</td>
+					</tr>
+					<tr>
+						<td>API Password:</td>
+						<td>
+							<input id="_api_password" type="text" name="_api_password" maxlength="255" class="ssid1" value="">
+						</td>
+					</tr>
+					<tr>
+						<td>Device Name:</td>
+						<td>
+							<input id="_device_name" type="text" name="_device_name" maxlength="255" class="ssid1" value="">
+						</td>
+					</tr>
+					<tr>
+						<td>Sensor Type:</td>
+						<td>
+							<select id="_sensor_type" name="_sensor_type">
+								<option value="none">None</option>
+								<option value="pressure_click">Pressure Click</option>
+								<option value="air_quality_click">Air Quality Click</option>
+								<option value="humidity_click">Humidity Click</option>
+								<option value="motion_click">Motion Click</option>
+							</select>										</td>
+					</tr>
+					<tr>
+						<td colspan="2" class="text-right">
+							<input id="joinButton" class="join_button" type="button" value="Join" onclick="joinNetwork();">
+						</td>
+					</tr>
+				</table>
+			</div>
+			<form method="post" name="kickoff" action="">
+				<input type="hidden" id="project_mqtt_id" name="project_mqtt_id"></input>
+				<input type="hidden" id="user_mqtt_id" name="user_mqtt_id"></input>
+				<input type="hidden" id="api_key" name="api_key"></input>
+				<input type="hidden" id="api_password" name="api_password"></input>
+				<input type="hidden" id="device_name" name="device_name"></input>
+				<input type="hidden" id="sensor_type" name="sensor_type"></input>
+			</form>
+~inc:footer.inc~
+
+		
