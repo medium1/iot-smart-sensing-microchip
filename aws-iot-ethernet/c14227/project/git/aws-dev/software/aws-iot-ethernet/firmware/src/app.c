@@ -82,6 +82,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 APP_DATA appData;
 extern APP1_DATA app1Data;
+extern BSP_DATA bspData;
 
 char topic_awsUpdate[128];
 char topic_awsUpdateDelta[128];
@@ -242,6 +243,8 @@ const char* APP_Switch_Publish_Helper(BSP_SWITCH_ENUM sw){
             return "state.reported.button3";
         case BSP_SWITCH_4:
             return "state.reported.button4";
+        case BSP_SWITCH_MINT:
+			return "state.reported.MInt";
         default:
             break;
     }
@@ -657,7 +660,7 @@ void APP_Tasks ( void )
                     dwLastIP[i].Val = ipAddr.Val;
                     if (ipAddr.v[0] != 0 && ipAddr.v[0] != 169) // Wait for a Valid IP
                     {
-                        sprintf(appData.local_ip, "%03d:%03d:%03d:%03d", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
+                        sprintf(appData.local_ip, "%d.%d.%d.%d", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
                         uint32_t lightShowVal = BSP_LED_EASY_CONFIGURATION;
                         xQueueSendToFront(app1Data.lightShowQueue, &lightShowVal, 1);
                         SYS_CONSOLE_PRINT("App:  Waiting for configuration from host: %s ...\r\n", appData.local_ip);
@@ -840,7 +843,7 @@ void APP_Tasks ( void )
             /* Publish Topic */
             { // send IP detection command
                 MqttPublish publish;
-                char publishPayload[512] = "{'detect_ip':true}";
+                char publishPayload[512] = "{\"event_data\":{'detect_ip':true}, \"add_client_ip\": true}";
                 XMEMSET(&publish, 0, sizeof(MqttPublish));
                 publish.retain = 0;
                 publish.qos = 0;
@@ -863,12 +866,25 @@ void APP_Tasks ( void )
                 MqttPublish publish;
                 char mac_address[20];
                 long mb_mem_used = 925; //TODO: Query used memory, currently hardcoded in KB with value reported from compiler
-                char connected_sensor[32] = "motion_click"; //TODO: detect connecting sensors
+                char connected_sensor[32] = "none";
                 char publishPayload[512];
                 char led1_status = (BSP_LEDStateGet(BSP_LED_1_CHANNEL, BSP_LED_1_PORT) == BSP_LED_STATE_ON);
                 char led2_status = (BSP_LEDStateGet(BSP_LED_2_CHANNEL, BSP_LED_2_PORT) == BSP_LED_STATE_ON);
                 char led3_status = (BSP_LEDStateGet(BSP_LED_3_CHANNEL, BSP_LED_3_PORT) == BSP_LED_STATE_ON);
                 char led4_status = (BSP_LEDStateGet(BSP_LED_4_CHANNEL, BSP_LED_4_PORT) == BSP_LED_STATE_ON);
+                
+                if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK) {
+                    strcpy(connected_sensor, "pressure_click");
+                }
+                else if (appData.app_sensor_type == APP_SENSOR_TYPE_AIR_QUALITY_CLICK) {
+                    strcpy(connected_sensor, "air_quality_click");
+                }
+                else if (appData.app_sensor_type == APP_SENSOR_TYPE_HUMIDITY_CLICK) {
+                    strcpy(connected_sensor, "humidity_click");
+                }
+                else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK) {
+                    strcpy(connected_sensor, "motion_click");
+                }
                 
                 sprintf(mac_address, "%02x:%02x:%02x:%02x:%02x:%02x",
                             appData.macAddress.v[0], appData.macAddress.v[1], appData.macAddress.v[2],
@@ -903,20 +919,34 @@ void APP_Tasks ( void )
         case APP_TCPIP_MQTT_LOOP:
         {
             int rc;
+            char publishPayload[512]="";
             
             // Send sensors data every minute
             if(APP_TIMER_Expired(&appData.mqttSendSensorsData, SEND_SENSORS_DATA)){
                 // Reset send sensors data timer
                 APP_TIMER_Set(&appData.mqttSendSensorsData);
                 
-                if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK)
-                { // Send sensors data
-                    MqttPublish publish;
-                    char motion_detected = 1; //TODO: Detect & read from motion_click sensor
-                    char publishPayload[512];
-
+                if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK) {
+                    
+                }
+                else if (appData.app_sensor_type == APP_SENSOR_TYPE_AIR_QUALITY_CLICK) {
+                    
+                }
+                else if (appData.app_sensor_type == APP_SENSOR_TYPE_HUMIDITY_CLICK) {
+                    
+                }
+                else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK) {
+                    
+                }
+                else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK)
+                { 
+                    char motion_detected = bspData.previousStateMInt;
                     sprintf(publishPayload, "{\"event_data\": {\"motion_detected\":%s, \"connected_sensor\":\"motion_click\"}}", (motion_detected)?"true":"false");
-                            
+                }
+                
+                if (publishPayload[0])
+                {   // Send sensors data
+                    MqttPublish publish;
                     XMEMSET(&publish, 0, sizeof(MqttPublish));
                     publish.retain = 0;
                     publish.qos = 0;
@@ -933,6 +963,9 @@ void APP_Tasks ( void )
                         appData.state = APP_TCPIP_ERROR;
                         break;
                     }
+                    
+                    // Reset keep alive timer since we sent a publish
+                    APP_TIMER_Set(&appData.mqttKeepAlive);
                 }
             }
             
@@ -954,6 +987,8 @@ void APP_Tasks ( void )
                     xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
                 }
             }
+            
+            
             rc = MqttClient_WaitMessage(&appData.myClient, 50);
             if (rc == MQTT_CODE_ERROR_TIMEOUT) {
                 /* Keep Alive */
@@ -987,53 +1022,65 @@ void APP_Tasks ( void )
                     switchPublish = true;
                 }
                 
-                /* Temporary disabled by NHM --
                 if(switchPublish || potPublish){
                     //Got switch change, send a publish
                     JSON_Value *rootValue = json_value_init_object();
                     JSON_Object *rootObj = json_value_get_object(rootValue);
                     char *serialized_string = NULL;
                     char reportedPayload[1024];
+                    char bHavePayload = 0;
                     if(switchPublish){
-                        json_object_dotset_string(rootObj, APP_Switch_Publish_Helper(test.switchNum), (test.switchVal ? "up" : "down"));         
+                        if (test.switchNum == BSP_SWITCH_MINT) {
+                            if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK) {
+                                json_object_dotset_boolean(rootObj, "event_data.motion_detected", test.switchVal);
+                                json_object_dotset_string(rootObj, "event_data.connected_sensor", "motion_click");
+                                bHavePayload = 1;
+                            }
+                        }
+                        else if (test.switchVal==BSP_SWITCH_STATE_ASSERTED) {
+                            //json_object_dotset_string(rootObj, APP_Switch_Publish_Helper(test.switchNum), (test.switchVal ? "up" : "down"));         
+                            json_object_dotset_number(rootObj, "event_data.button_press", test.switchNum);
+                            bHavePayload = 1;
+                        }
                     }
+                    
                     if(potPublish){
-                        char potString[5] = {'\0'};
-                        sprintf(potString, "%d", potVal);
-                        json_object_dotset_string(rootObj, "state.reported.potentiometer", potString);
+                        json_object_dotset_number(rootObj, "event_data.pot", potVal);
+                        bHavePayload = 1;
                     }
-                    serialized_string = json_serialize_to_string(rootValue);
-                    strcpy(reportedPayload, serialized_string);
-                    json_free_serialized_string(serialized_string);
+                    
+                    if (bHavePayload) {
+                        serialized_string = json_serialize_to_string(rootValue);
+                        strcpy(reportedPayload, serialized_string);
+                        json_free_serialized_string(serialized_string);
 
-                    // Publish Topic 
-                    MqttPublish publish;
-                    int rc;
-                    XMEMSET(&publish, 0, sizeof(MqttPublish));
-                    publish.retain = 0;
-                    publish.qos = 0;
-                    publish.duplicate = 0;
-                    // Build list of topics
-                    //publish.topic_name = topic_awsUpdate;
-                    publish.topic_name = appData.publish_topic_name;
-                    publish.packet_id = mqttclient_get_packetid();
-                    //publish.buffer = reportedPayload; //M1 Comment
-                    publish.buffer = "{\"event_data\":{\"test_key\":\"test_data3\"}}";
-                    publish.total_len = strlen(publish.buffer);
-                    rc = MqttClient_Publish(&appData.myClient, &publish);
-                    SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
-                        publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
-                    if (rc != MQTT_CODE_SUCCESS) {
-                        SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed, closing socket and reconnecting\r\n\r\n");
-                        appData.state = APP_TCPIP_ERROR;
+                        // Publish Topic 
+                        MqttPublish publish;
+                        int rc;
+                        XMEMSET(&publish, 0, sizeof(MqttPublish));
+                        publish.retain = 0;
+                        publish.qos = 0;
+                        publish.duplicate = 0;
+                        publish.topic_name = appData.publish_topic_name;
+                        publish.packet_id = mqttclient_get_packetid();
+                        publish.buffer = reportedPayload; 
+                        publish.total_len = strlen(publish.buffer);
+                        rc = MqttClient_Publish(&appData.myClient, &publish);
+                        SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
+                            publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
+                        if (rc != MQTT_CODE_SUCCESS) {
+                            SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed, closing socket and reconnecting\r\n\r\n");
+                            appData.state = APP_TCPIP_ERROR;
+                        }
+                        appData.lightShowVal = BSP_LED_TX;
+                        xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
+                        json_value_free(rootValue);
+                        
+                        // Reset keep alive timer since we sent a publish
+                        APP_TIMER_Set(&appData.mqttKeepAlive);
                     }
-                    appData.lightShowVal = BSP_LED_TX;
-                    xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
-                    json_value_free(rootValue);
-                    // Reset keep alive timer since we sent a publish
-                    APP_TIMER_Set(&appData.mqttKeepAlive);
                 }
-                */
+                
                 break;
             }
             else if( rc != MQTT_CODE_SUCCESS)

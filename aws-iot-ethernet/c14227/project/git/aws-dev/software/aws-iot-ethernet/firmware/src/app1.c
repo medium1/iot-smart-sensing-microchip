@@ -186,6 +186,10 @@ void APP1_Tasks ( void )
             // BSP tasks that control switch and led functions
             BSP_SYS_Tasks();
             
+            // We only queue sensor events when app in APP_TCPIP_MQTT_LOOP
+            if (appData.state != APP_TCPIP_MQTT_LOOP)
+                break;
+            
             // Check if switches are pressed and send a message to the queue
             if(BSP_SWITCH_SwitchGetState(BSP_SWITCH_1_PORT) != bspData.previousStateS1){
                 BSP_SWITCH_SwitchSetPreviousState(BSP_SWITCH_1_PORT, BSP_SWITCH_SwitchGetState(BSP_SWITCH_1_PORT));
@@ -211,6 +215,13 @@ void APP1_Tasks ( void )
                 mySwitchMessage.switchVal = bspData.previousStateS4;
                 xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
             }
+            if (BSP_SWITCH_SwitchGetState(BSP_SWITCH_MINT_PORT) != bspData.previousStateMInt)
+			{
+				BSP_SWITCH_SwitchSetPreviousState(BSP_SWITCH_MINT_PORT, BSP_SWITCH_SwitchGetState(BSP_SWITCH_MINT_PORT));
+				mySwitchMessage.switchNum = BSP_SWITCH_MINT;
+				mySwitchMessage.switchVal = bspData.previousStateMInt;
+				xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
+			}
             
             // Trigger an ADC reading every one second for the pot
             if((SYS_TMR_TickCountGet() - app1Data.potTimer) > (1000)){

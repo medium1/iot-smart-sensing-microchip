@@ -122,6 +122,9 @@ typedef enum
      /* SWITCH 4 */
      BSP_SWITCH_4_PORT = /*DOM-IGNORE-BEGIN*/PORTS_BIT_POS_5/*DOM-IGNORE-END*/,
 
+     /* SWITCH MINT */
+     BSP_SWITCH_MINT_PORT = /*DOM-IGNORE-BEGIN*/PORTS_BIT_POS_11/*DOM-IGNORE-END*/,
+             
 } BSP_SWITCH_PORT;
 
 typedef enum
@@ -138,6 +141,9 @@ typedef enum
      
      /* SWITCH 4 */
      BSP_SWITCH_4_CHANNEL = /*DOM-IGNORE-BEGIN*/PORT_CHANNEL_D/*DOM-IGNORE-END*/,
+             
+     /* SWITCH INT */
+     BSP_SWITCH_MINT_CHANNEL = /*DOM-IGNORE-BEGIN*/PORT_CHANNEL_D/*DOM-IGNORE-END*/,
 
 } BSP_SWITCH_CHANNEL;
 
@@ -148,6 +154,7 @@ typedef enum
     BSP_SWITCH_2 = 2,
     BSP_SWITCH_3 = 3,
     BSP_SWITCH_4 = 4,
+    BSP_SWITCH_MINT = 5,
             
 } BSP_SWITCH_ENUM;
 
@@ -193,12 +200,14 @@ typedef struct
 typedef struct
 {
     BSP_LED_LIGHT_SHOW light_show;
-    BSP_SWITCH_STATE  s1, s2, s3, s4;
+    BSP_SWITCH_STATE  s1, s2, s3, s4, MInt;
     BSP_SWITCH_STATE previousStateS1;
     BSP_SWITCH_STATE previousStateS2;
     BSP_SWITCH_STATE previousStateS3;
     BSP_SWITCH_STATE previousStateS4;
+    BSP_SWITCH_STATE previousStateMInt;
     BSP_SWITCH_DEBOUNCE_T switches[BSP_MAX_SWITCHES];
+    BSP_SWITCH_DEBOUNCE_T MIntD;
 } BSP_DATA;
 
 // *****************************************************************************
