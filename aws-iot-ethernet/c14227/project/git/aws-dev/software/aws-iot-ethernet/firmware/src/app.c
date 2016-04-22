@@ -935,9 +935,6 @@ void APP_Tasks ( void )
                 else if (appData.app_sensor_type == APP_SENSOR_TYPE_HUMIDITY_CLICK) {
                     
                 }
-                else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK) {
-                    
-                }
                 else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK)
                 { 
                     char motion_detected = bspData.previousStateMInt;

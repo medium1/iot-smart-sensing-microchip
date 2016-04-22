@@ -487,6 +487,9 @@ BSP_SWITCH_STATE BSP_SWITCH_SwitchGetState(BSP_SWITCH_PORT switchId)
         case BSP_SWITCH_4_PORT:
           return (BSP_SWITCH_STATE)bspData.s4;
         break;
+        case BSP_SWITCH_MINT_PORT:
+		  return(BSP_SWITCH_STATE)bspData.MInt;
+        break;
         default:
             return BSP_SWITCH_STATE_DEASSERTED;
     }
@@ -567,6 +570,13 @@ void BSP_SWITCH_Tasks(void)
     {
         bspData.s4 = val;
     }
+    
+    val = BSP_SWITCH_DeviceDebounce(&bspData.MIntD,
+		BSP_SWITCH_StateGet( BSP_SWITCH_MINT_CHANNEL, BSP_SWITCH_MINT_PORT));
+	if (val != BSP_SWITCH_BUSY)
+	{
+		bspData.MInt = val;
+	}
 }
 
 /*******************************************************************************
