@@ -211,52 +211,12 @@ void process_menus(char inkey)
 					menuid=MAIN_MENU;	// FCKE0A pin R20 = SDR_MEM_CKE[0]
 					break;
 				case  '1':
-					appData.state = APP_TCPIP_WAIT_CONFIGURATION;
-					sprintf(appData.host, "mqtt.mediumone.com"); 
-					sprintf(appData.project_mqtt_id, "4ZNl9dzePwU"); 
-					sprintf(appData.user_mqtt_id, "aePcZNfE1M8"); 
-					sprintf(appData.api_key, "K7MSXC435WPI2XABY2RK3CZQGNQTMNLCGFSDMZRQGQ4DAMBQ"); 
-					sprintf(appData.api_password, "Microchip!123"); 
-					sprintf(appData.device_name, "motion0002"); 
-					appData.app_sensor_type=APP_SENSOR_TYPE_MOTION_CLICK;
-					appData.port=AWS_IOT_PORT;
-					validConfig = 1;
 					break;
 				case  '2':
-					appData.state = APP_TCPIP_WAIT_CONFIGURATION;
-					sprintf(appData.host, "mqtt.mediumone.com"); 
-					sprintf(appData.project_mqtt_id, "4ZNl9dzePwU"); 
-					sprintf(appData.user_mqtt_id, "aePcZNfE1M8"); 
-					sprintf(appData.api_key, "K7MSXC435WPI2XABY2RK3CZQGNQTMNLCGFSDMZRQGQ4DAMBQ"); 
-					sprintf(appData.api_password, "Microchip!123"); 
-					sprintf(appData.device_name, "motion0002"); 
-					appData.app_sensor_type=APP_SENSOR_TYPE_AIR_QUALITY_CLICK;
-					appData.port=AWS_IOT_PORT;
-					validConfig = 1;
 					break;
 				case  '3':
-					appData.state = APP_TCPIP_WAIT_CONFIGURATION;
-					sprintf(appData.host, "mqtt.mediumone.com"); 
-					sprintf(appData.project_mqtt_id, "4ZNl9dzePwU"); 
-					sprintf(appData.user_mqtt_id, "aePcZNfE1M8"); 
-					sprintf(appData.api_key, "K7MSXC435WPI2XABY2RK3CZQGNQTMNLCGFSDMZRQGQ4DAMBQ"); 
-					sprintf(appData.api_password, "Microchip!123"); 
-					sprintf(appData.device_name, "motion0002"); 
-					appData.app_sensor_type=APP_SENSOR_TYPE_PRESSURE_CLICK;
-					appData.port=AWS_IOT_PORT;
-					validConfig = 1;
 					break;
 				case  '4':
-					appData.state = APP_TCPIP_WAIT_CONFIGURATION;
-					sprintf(appData.host, "mqtt.mediumone.com"); 
-					sprintf(appData.project_mqtt_id, "4ZNl9dzePwU"); 
-					sprintf(appData.user_mqtt_id, "aePcZNfE1M8"); 
-					sprintf(appData.api_key, "K7MSXC435WPI2XABY2RK3CZQGNQTMNLCGFSDMZRQGQ4DAMBQ"); 
-					sprintf(appData.api_password, "Microchip!123"); 
-					sprintf(appData.device_name, "motion0002"); 
-					appData.app_sensor_type=APP_SENSOR_TYPE_HUMIDITY_CLICK;
-					appData.port=AWS_IOT_PORT;
-					validConfig = 1;
 					break;
 				case  '5':
 					break;
@@ -339,9 +299,4 @@ void log_key_value(void)
 |---------------------------------------------------------------------*/
 void display_main_menu(void)
 {
-	SYS_CONSOLE_PRINT("Main Menu %s : %s %s\r\n",FIRMWARE_VERSION_LABLE,__DATE__,__TIME__);
-	SYS_CONSOLE_MESSAGE("1. Send MQTT request to mqtt.mediumone.com Motion Click\r\n");
-	SYS_CONSOLE_MESSAGE("2. Send MQTT request to mqtt.mediumone.com Air Quality Click\r\n");
-	SYS_CONSOLE_MESSAGE("3. Send MQTT request to mqtt.mediumone.com Pressure Click\r\n");
-	SYS_CONSOLE_MESSAGE("4. Send MQTT request to mqtt.mediumone.com Humidity Click\r\n");
 }

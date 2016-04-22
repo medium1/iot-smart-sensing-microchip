@@ -109,7 +109,7 @@ extern size_t ReadCommandCharacter(const void* cmdIoParam);
 extern void process_menus(char inkey);
 
 static char motion_detected = 1;	//Detect & read from motion_click sensor
-static bool  StateChanged; 
+static bool  HumChanged,PotChanged,PressureChanged,AirChanged,MotionChanged,Button1Changed,Button2Changed,Button3Changed,Button4Changed; 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions
@@ -753,7 +753,6 @@ void APP_Tasks ( void )
 							SYS_CONSOLE_PRINT("App:  Waiting for configuration from host: %s ...\r\n", appData.local_ip);
 							appData.state = APP_TCPIP_WAIT_CONFIGURATION;
 							menuid=MAIN_MENU;
-							display_main_menu();
 						}
 					}
 				}
@@ -1014,12 +1013,12 @@ void APP_Tasks ( void )
 				int rc;
 
 				// Send sensors data every minute
-				if (APP_TIMER_Expired(&appData.mqttSendSensorsData, SEND_SENSORS_DATA) || StateChanged==true)
+				if (APP_TIMER_Expired(&appData.mqttSendSensorsData, SEND_SENSORS_DATA) || 
+					 PotChanged==true || MotionChanged==true || Button1Changed==true || Button2Changed==true || Button3Changed==true || Button4Changed==true)
 				{
 					// Reset send sensors data timer
 					APP_TIMER_Set(&appData.mqttSendSensorsData);
-					StateChanged=false;
-					if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK)
+					if (MotionChanged==true)
 					{ // Send sensors data
 						MqttPublish publish;
 						char publishPayload[512];
@@ -1043,6 +1042,137 @@ void APP_Tasks ( void )
 							appData.state = APP_TCPIP_ERROR;
 							break;
 						}
+						MotionChanged=false;
+					}
+					else if (PotChanged==true)
+					{ // Send sensors data
+						MqttPublish publish;
+						char publishPayload[512];
+
+						sprintf(publishPayload, "{\"event_data\": {\"pot\":%d}}", app1Data.potValue);
+
+						XMEMSET(&publish, 0, sizeof(MqttPublish));
+						publish.retain = 0;
+						publish.qos = 0;
+						publish.duplicate = 0;
+						publish.topic_name = appData.publish_topic_name;
+						publish.packet_id = mqttclient_get_packetid();
+						publish.buffer = publishPayload;
+						publish.total_len = strlen(publish.buffer);
+						rc = MqttClient_Publish(&appData.myClient, &publish);
+						SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
+												publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
+						if (rc != MQTT_CODE_SUCCESS)
+						{
+							SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed\r\n");   
+							appData.state = APP_TCPIP_ERROR;
+							break;
+						}
+						PotChanged=false;
+					}
+					else if (Button1Changed==true)
+					{ // Send sensors data
+						MqttPublish publish;
+						char publishPayload[512];
+
+						sprintf(publishPayload, "{\"event_data\": {\"button_press\":1}}");
+
+						XMEMSET(&publish, 0, sizeof(MqttPublish));
+						publish.retain = 0;
+						publish.qos = 0;
+						publish.duplicate = 0;
+						publish.topic_name = appData.publish_topic_name;
+						publish.packet_id = mqttclient_get_packetid();
+						publish.buffer = publishPayload;
+						publish.total_len = strlen(publish.buffer);
+						rc = MqttClient_Publish(&appData.myClient, &publish);
+						SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
+												publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
+						if (rc != MQTT_CODE_SUCCESS)
+						{
+							SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed\r\n");   
+							appData.state = APP_TCPIP_ERROR;
+							break;
+						}
+						Button1Changed=false;
+					}
+					else if (Button2Changed==true)
+					{ // Send sensors data
+						MqttPublish publish;
+						char publishPayload[512];
+
+						sprintf(publishPayload, "{\"event_data\": {\"button_press\":2}}");
+
+						XMEMSET(&publish, 0, sizeof(MqttPublish));
+						publish.retain = 0;
+						publish.qos = 0;
+						publish.duplicate = 0;
+						publish.topic_name = appData.publish_topic_name;
+						publish.packet_id = mqttclient_get_packetid();
+						publish.buffer = publishPayload;
+						publish.total_len = strlen(publish.buffer);
+						rc = MqttClient_Publish(&appData.myClient, &publish);
+						SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
+												publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
+						if (rc != MQTT_CODE_SUCCESS)
+						{
+							SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed\r\n");   
+							appData.state = APP_TCPIP_ERROR;
+							break;
+						}
+						Button2Changed=false;
+					}
+					else if (Button3Changed==true)
+					{ // Send sensors data
+						MqttPublish publish;
+						char publishPayload[512];
+
+						sprintf(publishPayload, "{\"event_data\": {\"button_press\":3}}");
+
+						XMEMSET(&publish, 0, sizeof(MqttPublish));
+						publish.retain = 0;
+						publish.qos = 0;
+						publish.duplicate = 0;
+						publish.topic_name = appData.publish_topic_name;
+						publish.packet_id = mqttclient_get_packetid();
+						publish.buffer = publishPayload;
+						publish.total_len = strlen(publish.buffer);
+						rc = MqttClient_Publish(&appData.myClient, &publish);
+						SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
+												publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
+						if (rc != MQTT_CODE_SUCCESS)
+						{
+							SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed\r\n");   
+							appData.state = APP_TCPIP_ERROR;
+							break;
+						}
+						Button3Changed=false;
+					}
+					else if (Button4Changed==true)
+					{ // Send sensors data
+						MqttPublish publish;
+						char publishPayload[512];
+
+						sprintf(publishPayload, "{\"event_data\": {\"button_press\":4}}");
+
+						XMEMSET(&publish, 0, sizeof(MqttPublish));
+						publish.retain = 0;
+						publish.qos = 0;
+						publish.duplicate = 0;
+						publish.topic_name = appData.publish_topic_name;
+						publish.packet_id = mqttclient_get_packetid();
+						publish.buffer = publishPayload;
+						publish.total_len = strlen(publish.buffer);
+						rc = MqttClient_Publish(&appData.myClient, &publish);
+						SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
+												publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
+						if (rc != MQTT_CODE_SUCCESS)
+						{
+							SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed\r\n");   
+							appData.state = APP_TCPIP_ERROR;
+							break;
+						}
+						Button4Changed=false;
 					}
 				}
 
@@ -1135,13 +1265,6 @@ void APP_Tasks ( void )
 				break;
 			}
 	}
-	ReadCommandCharacter(NULL);
-	if (readBuff[0] != 0x30 && readBuff[0] != NULL)
-	{
-		//SYS_CONSOLE_PRINT("App=%c\r\n",inkeyc);
-		process_menus(readBuff[0]);
-		readBuff[0]=0x30;
-	}
 	switch (display_message)
 	{
 		case 1:
@@ -1203,7 +1326,7 @@ void APP1_Tasks ( void )
 					mySwitchMessage.switchVal = bspData.previousStateS1;
 					xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
 					SYS_CONSOLE_MESSAGE("App:  Button1 Pressed\r\n"); 
-					StateChanged=true;
+					Button1Changed=true;
 				}
 				if (BSP_SWITCH_SwitchGetState(BSP_SWITCH_2_PORT) != bspData.previousStateS2)
 				{
@@ -1212,7 +1335,7 @@ void APP1_Tasks ( void )
 					mySwitchMessage.switchVal = bspData.previousStateS2;
 					xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
 					SYS_CONSOLE_MESSAGE("App:  Button2 Pressed\r\n"); 
-					StateChanged=true;
+					Button2Changed=true;
 				}
 				if (BSP_SWITCH_SwitchGetState(BSP_SWITCH_3_PORT) != bspData.previousStateS3)
 				{
@@ -1221,7 +1344,7 @@ void APP1_Tasks ( void )
 					mySwitchMessage.switchVal = bspData.previousStateS3;
 					xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
 					SYS_CONSOLE_MESSAGE("App:  Button3 Pressed\r\n"); 
-					StateChanged=true;
+					Button3Changed=true;
 				}
 				if (BSP_SWITCH_SwitchGetState(BSP_SWITCH_4_PORT) != bspData.previousStateS4)
 				{
@@ -1230,7 +1353,7 @@ void APP1_Tasks ( void )
 					mySwitchMessage.switchVal = bspData.previousStateS4;
 					xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
 					SYS_CONSOLE_MESSAGE("App:  Button4 Pressed\r\n"); 
-					StateChanged=true;
+					Button4Changed=true;
 				}
 				if (BSP_SWITCH_SwitchGetState(BSP_SWITCH_MINT_PORT) != bspData.previousStateMInt)
 				{
@@ -1248,7 +1371,7 @@ void APP1_Tasks ( void )
 						SYS_CONSOLE_MESSAGE("App:  Motion Detected\r\n"); 
 						motion_detected = 1;	//Detect & read from motion_click sensor
 					}
-					StateChanged=true;
+					MotionChanged=true;
 				}
 
 				// Trigger an ADC reading every one second for the pot
@@ -1281,18 +1404,13 @@ void APP1_Tasks ( void )
 						uint32_t adcVal;
 						app1Data.newPotSamp = (uint16_t)DRV_ADC_DigitalFilter0_DataRead();
 						adcVal = app1Data.newPotSamp >> 6;
-						if (adcVal != app1Data.potValue)
+						if ((adcVal-app1Data.potValue) > 1 || (app1Data.potValue-adcVal) > 1)
 						{
 							app1Data.potValue = adcVal;
 							app1Data.potChanged = true;
-							StateChanged=true;
-						}
-
-						if (app1Data.potChanged)
-						{
-							xQueueSendToBack( app1Data.potentiometerQueue, &app1Data.potValue, 1 );
-							app1Data.potChanged = false;
+							PotChanged=true;
 							display_message=1;
+							xQueueSendToBack( app1Data.potentiometerQueue, &app1Data.potValue, 1 );
 						}
 					}
 					clickid++;
@@ -1310,14 +1428,9 @@ void APP1_Tasks ( void )
 						{
 							app1Data.airValue = adcVal;
 							app1Data.airChanged = true;
-							StateChanged=true;
-						}
-
-						if (app1Data.airChanged)
-						{
-							xQueueSendToBack( app1Data.potentiometerQueue, &app1Data.airValue, 1 );
-							app1Data.airChanged = false;
+							AirChanged=true;
 							display_message=2;
+							xQueueSendToBack( app1Data.potentiometerQueue, &app1Data.airValue, 1 );
 						}
 					}
 					if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK)
@@ -1339,42 +1452,17 @@ void APP1_Tasks ( void )
 						{
 							app1Data.pressureValue = tempVal;
 							app1Data.pressureChanged = true;
-							StateChanged=true;
-						}
-
-						if (app1Data.pressureChanged)
-						{
-							xQueueSendToBack( app1Data.pressureQueue, &app1Data.pressureValue, 1 );
-							app1Data.pressureChanged = false;
+							PressureChanged=true;
 							display_message=3;
+							xQueueSendToBack( app1Data.pressureQueue, &app1Data.pressureValue, 1 );
 						}
 					}
 					clickid=0;
 				}
 				if (clickid==3)
 				{
-					#ifdef FAI /* TODO add Humidity click  4/22/2016 Fai Cheng */
-					uint32_t tempVal;
-					if (pressure_value>0)
-					{
-						pressure_temp_read();
-						app1Data.newPressureSamp = pressure_value;
-						tempVal = app1Data.newPressureSamp;
-						if (tempVal != app1Data.pressureValue)
-						{
-							app1Data.pressureValue = tempVal;
-							app1Data.pressureChanged = true;
-							StateChanged=true;
-						}
-
-						if (app1Data.pressureChanged)
-						{
-							xQueueSendToBack( app1Data.pressureQueue, &app1Data.pressureValue, 1 );
-							app1Data.pressureChanged = false;
-							display_message=3;
-						}
-					}
-					#endif
+#ifdef FAI /* TODO add Humidity click  4/22/2016 Fai Cheng */
+#endif
 					clickid=0;
 				}
 
