@@ -46,6 +46,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
+#include "app.h"
 #include "system_config.h"
 #include "system_definitions.h"
 
@@ -255,6 +256,7 @@ static const NET_PRES_INST_DATA netPresCfgs[] =
         .pProvObject_dc = NULL,
     },
 };
+
 
 static const NET_PRES_INIT_DATA netPresInitData = 
 {
@@ -982,8 +984,8 @@ void SYS_Initialize ( void* data )
 
     /* Initialize Drivers */
 
-    /* Initialize ADC */
-    DRV_ADC_Initialize();
+    /* Initialize i2c Driver */
+	 InitI2C1();
 
     /*Initialize CMP/CVREF */
     DRV_CMP_Initialize();

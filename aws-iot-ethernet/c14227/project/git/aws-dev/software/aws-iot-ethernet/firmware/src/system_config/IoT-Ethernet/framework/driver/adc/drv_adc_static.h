@@ -78,14 +78,9 @@ inline void DRV_ADC_Start(void);
 
 inline void DRV_ADC_Stop(void);
 
-
 uint32_t DRV_ADC_SamplesRead(uint8_t bufIndex);
 
 bool DRV_ADC_SamplesAvailable(uint8_t bufIndex);
-
-
-
-
 
 inline void DRV_ADC_DigitalFilter0_Open(void);
 
@@ -94,6 +89,31 @@ inline void DRV_ADC_DigitalFilter0_Close(void);
 inline bool DRV_ADC_DigitalFilter0_DataIsReady(void);
 
 inline int16_t DRV_ADC_DigitalFilter0_DataRead(void);
+
+
+void DRV_ADC_Initialize1(void);
+
+inline void DRV_ADC_DeInitialize1(void);
+
+inline void DRV_ADC0_Open1(void);
+
+inline void DRV_ADC0_Close1(void);
+
+inline void DRV_ADC_Start1(void);
+
+inline void DRV_ADC_Stop1(void);
+
+uint32_t DRV_ADC_SamplesRead1(uint8_t bufIndex);
+
+bool DRV_ADC_SamplesAvailable1(uint8_t bufIndex);
+
+inline void DRV_ADC_DigitalFilter0_Open1(void);
+
+inline void DRV_ADC_DigitalFilter0_Close1(void);
+
+inline bool DRV_ADC_DigitalFilter0_DataIsReady1(void);
+
+inline int16_t DRV_ADC_DigitalFilter0_DataRead1(void);
 
 
 

@@ -122,6 +122,7 @@ void APP1_Initialize ( void )
     BSP_Initialize();
     BSP_LED_LightShowSet(BSP_LED_CONNECTING_TO_AP);
     app1Data.newPotSamp = 0;
+    app1Data.newAirSamp = 0;
     app1Data.potTimer = 0;
     app1Data.newVoltageSamp = 0;
     app1Data.currIsLVD = true;
@@ -143,114 +144,21 @@ void APP1_Initialize ( void )
     if(app1Data.potentiometerQueue == NULL) {
         ; // Handle this
     }
+    // Queue for air quality data
+    // This will hold the latest air quality data
+    app1Data.airqualityQueue = xQueueCreate( 20, sizeof(app1Data.airValue) );
+    if(app1Data.airqualityQueue == NULL) {
+        ; // Handle this
+    }
+    app1Data.pressureQueue = xQueueCreate( 20, sizeof(app1Data.pressureValue) );
+    if(app1Data.pressureQueue == NULL) {
+        ; // Handle this
+    }
     xQueueReset(app1Data.switchQueue);
     xQueueReset(app1Data.lightShowQueue);
     xQueueReset(app1Data.potentiometerQueue);
-}
-
-
-/******************************************************************************
-  Function:
-    void APP1_Tasks ( void )
-
-  Remarks:
-    See prototype in app1.h.
- */
-
-void APP1_Tasks ( void )
-{
-    /* Check the application's current state. */
-    switch ( app1Data.state )
-    {
-        /* Application's initial state. */
-        case APP1_STATE_INIT:
-        {
-            bool appInitialized = true;
-       
-        
-            if (appInitialized)
-            {
-                // Open the ADC drivers
-                DRV_ADC0_Open();
-               // DRV_ADC1_Open();
-                DRV_ADC_DigitalFilter0_Open();
-               // DRV_ADC_DigitalFilter1_Open();
-                DRV_ADC_Start();
-                app1Data.state = APP1_STATE_SERVICE_TASKS;
-            }
-            break;
-        }
-
-        case APP1_STATE_SERVICE_TASKS:
-        {
-            // BSP tasks that control switch and led functions
-            BSP_SYS_Tasks();
-            
-            // Check if switches are pressed and send a message to the queue
-            if(BSP_SWITCH_SwitchGetState(BSP_SWITCH_1_PORT) != bspData.previousStateS1){
-                BSP_SWITCH_SwitchSetPreviousState(BSP_SWITCH_1_PORT, BSP_SWITCH_SwitchGetState(BSP_SWITCH_1_PORT));
-                mySwitchMessage.switchNum = BSP_SWITCH_1;
-                mySwitchMessage.switchVal = bspData.previousStateS1;
-                xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
-            }
-            if(BSP_SWITCH_SwitchGetState(BSP_SWITCH_2_PORT) != bspData.previousStateS2){
-                BSP_SWITCH_SwitchSetPreviousState(BSP_SWITCH_2_PORT, BSP_SWITCH_SwitchGetState(BSP_SWITCH_2_PORT));
-                mySwitchMessage.switchNum = BSP_SWITCH_2;
-                mySwitchMessage.switchVal = bspData.previousStateS2;
-                xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
-            }
-            if(BSP_SWITCH_SwitchGetState(BSP_SWITCH_3_PORT) != bspData.previousStateS3){
-                BSP_SWITCH_SwitchSetPreviousState(BSP_SWITCH_3_PORT, BSP_SWITCH_SwitchGetState(BSP_SWITCH_3_PORT));
-                mySwitchMessage.switchNum = BSP_SWITCH_3;
-                mySwitchMessage.switchVal = bspData.previousStateS3;
-                xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
-            }
-            if(BSP_SWITCH_SwitchGetState(BSP_SWITCH_4_PORT) != bspData.previousStateS4){
-                BSP_SWITCH_SwitchSetPreviousState(BSP_SWITCH_4_PORT, BSP_SWITCH_SwitchGetState(BSP_SWITCH_4_PORT));
-                mySwitchMessage.switchNum = BSP_SWITCH_4;
-                mySwitchMessage.switchVal = bspData.previousStateS4;
-                xQueueSendToBack( app1Data.switchQueue, &mySwitchMessage, 1 );
-            }
-            
-            // Trigger an ADC reading every one second for the pot
-            if((SYS_TMR_TickCountGet() - app1Data.potTimer) > (1000)){
-                app1Data.potTimer = SYS_TMR_TickCountGet();
-                DRV_ADC_Start();
-            }
-            
-            // If the ADC reading is ready, see if value changed and send a message to queue
-            if(DRV_ADC_DigitalFilter0_DataIsReady()) {
-                app1Data.newPotSamp = (uint16_t)DRV_ADC_DigitalFilter0_DataRead();
-                uint32_t adcVal;
-                adcVal = app1Data.newPotSamp >> 6;
-                if(adcVal != app1Data.potValue) {
-                    app1Data.potValue = adcVal;
-                    app1Data.potChanged = true;
-                }
-                
-                if(app1Data.potChanged){
-                    xQueueSendToBack( app1Data.potentiometerQueue, &app1Data.potValue, 1 );
-                    app1Data.potChanged = false;
-                }
-            }
-            
-            // Check light show queue for a state, if exists, set state
-            if( uxQueueMessagesWaiting( app1Data.lightShowQueue ) > 0 ){
-                uint32_t lightShowVar;
-                xQueueReceive( app1Data.lightShowQueue, &lightShowVar, 1 );
-                BSP_LED_LightShowSet(lightShowVar);
-            }
-            
-            break;
-        }
-        
-        /* The default state should never be executed. */
-        default:
-        {
-            /* TODO: Handle error in application's state machine. */
-            break;
-        }
-    }
+	 xQueueReset(app1Data.airqualityQueue);
+	 xQueueReset(app1Data.pressureQueue);
 }
 
  

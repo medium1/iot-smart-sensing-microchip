@@ -67,7 +67,7 @@ typedef struct _MqttMessage {
 
 /* Topic */
 typedef struct _MqttTopic {
-    const char *topic_filter;
+    const char* topic_filter;
 
     /* These are only on subscribe */
     MqttQoS     qos; /* Bits 0-1 = MqttQoS */

@@ -58,7 +58,6 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include <stdlib.h>
 #include "system_config.h"
 #include "system_definitions.h"
-
 #include "wolfmqttsdk/wolfmqtt/mqtt_client.h"
 
 // DOM-IGNORE-BEGIN
@@ -87,6 +86,7 @@ extern "C" {
 #define NVM_DEVICE_NAME_SPACE           (NVM_API_PASSWORD_SPACE+256)
 #define NVM_SENSOR_TYPE_SPACE           (NVM_DEVICE_NAME_SPACE+256)
     
+#define MAIN_MENU 0
 /* Application Codes */
 enum AppCodes {
     APP_CODE_SUCCESS = 0,
@@ -310,6 +310,17 @@ bool APP_TIMER_Expired(uint32_t * timer, uint32_t seconds);
 bool APP_TIMER_Expired_ms(uint32_t * timer, uint32_t mseconds);
 bool APP_TIMER_Set(uint32_t * timer);
 
+void pressure_temp_read(void);
+
+void InitI2C1(void);
+bool ReadI2C1(unsigned short reg);
+bool writeI2C1reg(unsigned short reg,unsigned short val);
+bool waitForI2C1(void);
+
+int I2C1_val1,I2C1_val2;
+static long int pressure_value=1;										// Declaration of pressure variable
+int temperature_value;									  	// Declaration of temperature variable
+unsigned char chip_id_address;
 #endif /* _APP_H */
 
 //DOM-IGNORE-BEGIN

@@ -122,10 +122,20 @@ typedef struct
     QueueHandle_t switchQueue;
     QueueHandle_t lightShowQueue;
     QueueHandle_t potentiometerQueue;
+    QueueHandle_t airqualityQueue;
+    QueueHandle_t pressureQueue;
     
     uint32_t    newPotSamp;
     uint32_t    potValue;
     bool        potChanged;
+    
+    uint32_t    newAirSamp;
+    uint32_t    airValue;
+    bool        airChanged;
+    
+    uint32_t    newPressureSamp;
+    uint32_t    pressureValue;
+    bool        pressureChanged;
     
     uint32_t    newVoltageSamp;
     uint32_t    voltageValue;

@@ -83,10 +83,12 @@ void BSP_Initialize(void )
     bspData.previousStateS2 = BSP_SWITCH_STATE_DEASSERTED;
     bspData.previousStateS3 = BSP_SWITCH_STATE_DEASSERTED;
     bspData.previousStateS4 = BSP_SWITCH_STATE_DEASSERTED;
+	bspData.previousStateMInt = BSP_SWITCH_STATE_DEASSERTED;
     bspData.s1              = BSP_SWITCH_STATE_DEASSERTED;
     bspData.s2              = BSP_SWITCH_STATE_DEASSERTED;
     bspData.s3              = BSP_SWITCH_STATE_DEASSERTED;
     bspData.s4              = BSP_SWITCH_STATE_DEASSERTED;
+	bspData.MInt            = BSP_SWITCH_STATE_DEASSERTED;
 
     /* Initialize switch state machine values for each switch object */
     int i;
@@ -97,6 +99,13 @@ void BSP_Initialize(void )
        bspData.switches[i].endTick      = 0;
        bspData.switches[i].timerActive  = false;
     }
+	bspData.MIntD.duration     =  BSP_SWITCH_DEBOUNCE_TIME;
+	bspData.MIntD.startTick    = 0;
+	bspData.MIntD.endTick      = 0;
+	bspData.MIntD.timerActive  = false;
+	for (i=0; i<50; i++)
+		SYS_CONSOLE_MESSAGE("\r\n");
+	SYS_CONSOLE_MESSAGE("Saritasa copyright reserved 2016\r\n");
 }
 
 // *****************************************************************************
@@ -479,6 +488,9 @@ BSP_SWITCH_STATE BSP_SWITCH_SwitchGetState(BSP_SWITCH_PORT switchId)
         break;
         case BSP_SWITCH_4_PORT:
           return (BSP_SWITCH_STATE)bspData.s4;
+			break;
+		case BSP_SWITCH_MINT_PORT:
+			return(BSP_SWITCH_STATE)bspData.MInt;
         break;
         default:
             return BSP_SWITCH_STATE_DEASSERTED;
@@ -500,6 +512,9 @@ void BSP_SWITCH_SwitchSetPreviousState(BSP_SWITCH_PORT switchId, BSP_SWITCH_STAT
         break;
         case BSP_SWITCH_4_PORT:
           bspData.previousStateS4 = var;
+			break;
+		case BSP_SWITCH_MINT_PORT:
+			bspData.previousStateMInt = var;
         break;
         default:
              ;
@@ -557,6 +572,13 @@ void BSP_SWITCH_Tasks(void)
     {
         bspData.s4 = val;
     }
+
+	val = BSP_SWITCH_DeviceDebounce(&bspData.MIntD,
+											  BSP_SWITCH_StateGet( BSP_SWITCH_MINT_CHANNEL, BSP_SWITCH_MINT_PORT));
+	if (val != BSP_SWITCH_BUSY)
+	{
+		bspData.MInt = val;
+	}
 }
 
 /*******************************************************************************

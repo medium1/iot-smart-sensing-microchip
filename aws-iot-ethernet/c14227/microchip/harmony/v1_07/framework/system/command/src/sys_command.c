@@ -87,7 +87,7 @@ extern SYS_MODULE_OBJ sysConsoleObjects[];
 static SYS_CMD_DEVICE_LIST cmdIODevList = {0, 0, 0};
 
 static char printBuff[SYS_CMD_PRINT_BUFFER_SIZE] SYS_CMD_BUFFER_DMA_READY;
-static char readBuff[SYS_CMD_READ_BUFFER_SIZE] SYS_CMD_BUFFER_DMA_READY;
+char readBuff[SYS_CMD_READ_BUFFER_SIZE] SYS_CMD_BUFFER_DMA_READY;
 static int printBuffPtr = 0;
 
 static SYS_CMD_INIT_DATA _cmdAppData =
@@ -128,7 +128,7 @@ static void SendCommandPrint(const void* cmdIoParam, const char* format, ...);
 static void SendCommandCharacter(const void* cmdIoParam, char c);
 static bool IsCommandReady(const void* cmdIoParam);
 static char GetCommandCharacter(const void* cmdIoParam);
-static size_t ReadCommandCharacter(const void* cmdIoParam);
+size_t ReadCommandCharacter(const void* cmdIoParam);
 
 const SYS_CMD_API sysConsoleApi =
 {
@@ -916,7 +916,7 @@ static char GetCommandCharacter(const void* cmdIoParam)
     return '\0';
 }
 
-static size_t ReadCommandCharacter(const void* cmdIoParam)
+size_t ReadCommandCharacter(const void* cmdIoParam)
 {
     int readConsoleIndex = 0;
 

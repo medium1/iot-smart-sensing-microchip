@@ -3,10 +3,26 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/Users/nhm/saritasa/embeded/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/app.h</file>
-            <file>file:/Users/nhm/saritasa/embeded/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/wolfmqttsdk/src/mqtt_client.c</file>
-            <file>file:/Users/nhm/saritasa/embeded/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/configuration_http.c</file>
-            <file>file:/Users/nhm/saritasa/embeded/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/app.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/system_config/IoT-Ethernet/system_tasks.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/system_config/IoT-Ethernet/system_interrupt.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/Pressure_Click.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/aws-iot-ethernet.X/nbproject/Makefile-IoT-Ethernet.mk</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/microchip/harmony/v1_07/framework/driver/usb/usbhs/src/dynamic/drv_usbhs.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/microchip/harmony/v1_07/framework/crypto/src/tfm.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/configuration_http.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/app.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/system_config/IoT-Ethernet/framework/net/pres/net_pres_enc_glue.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/microchip/harmony/v1_07/framework/driver/usb/usbhs/src/dynamic/drv_usbhs_device.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/i2c_read_write.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/app.h</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/system_config/IoT-Ethernet/system_init.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/main_menu.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/system_config/IoT-Ethernet/system_config.h</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/microchip/harmony/v1_07/framework/driver/nvm/src/dynamic/drv_nvm.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/system_config/IoT-Ethernet/system_exceptions.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/microchip/harmony/v1_07/third_party/rtos/FreeRTOS/Source/tasks.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/system_config/IoT-Ethernet/framework/system/clk/src/sys_clk_static.c</file>
+            <file>file:/C:/aws-iot-ethernet/c14227/project/git/aws-dev/software/aws-iot-ethernet/firmware/src/bsp_sys_init.c</file>
         </group>
     </open-files>
 </project-private>

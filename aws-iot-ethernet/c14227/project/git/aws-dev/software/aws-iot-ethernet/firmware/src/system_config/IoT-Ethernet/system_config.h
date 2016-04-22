@@ -2,23 +2,23 @@
   MPLAB Harmony System Configuration Header
 
   File Name:
-    system_config.h
+	 system_config.h
 
   Summary:
-    Build-time configuration header for the system defined by this MPLAB Harmony
-    project.
+	 Build-time configuration header for the system defined by this MPLAB Harmony
+	 project.
 
   Description:
-    An MPLAB Project may have multiple configurations.  This file defines the
-    build-time options for a single configuration.
+	 An MPLAB Project may have multiple configurations.  This file defines the
+	 build-time options for a single configuration.
 
   Remarks:
-    This configuration header must not define any prototypes or data
-    definitions (or include any files that do).  It only provides macro
-    definitions for build-time configuration options that are not instantiated
-    until used by another MPLAB Harmony module or application.
-    
-    Created with MPLAB Harmony Version 1.07
+	 This configuration header must not define any prototypes or data
+	 definitions (or include any files that do).  It only provides macro
+	 definitions for build-time configuration options that are not instantiated
+	 until used by another MPLAB Harmony module or application.
+	 
+	 Created with MPLAB Harmony Version 1.07
 *******************************************************************************/
 
 // DOM-IGNORE-BEGIN
@@ -55,7 +55,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 /*  This section Includes other configuration headers necessary to completely
-    define this configuration.
+	 define this configuration.
 */
 
 // DOM-IGNORE-BEGIN
@@ -64,6 +64,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 extern "C" {
 
 #endif
+
 // DOM-IGNORE-END 
 
 // *****************************************************************************
@@ -90,7 +91,7 @@ extern "C" {
 #define SYS_CLK_BUS_PERIPHERAL_8            200000000ul
 #define SYS_CLK_CONFIG_PRIMARY_XTAL         24000000ul
 #define SYS_CLK_CONFIG_SECONDARY_XTAL       0ul
-   
+
 /*** Interrupt System Service Configuration ***/
 #define SYS_INT                     true
 
@@ -127,6 +128,7 @@ extern "C" {
 #define SYS_PORT_F_CNPU         0x0
 #define SYS_PORT_F_CNPD         0x0
 #define SYS_PORT_F_CNEN         0x0
+
 /*** Timer System Service Configuration ***/
 #define SYS_TMR_POWER_STATE             SYS_MODULE_POWER_RUN_FULL
 #define SYS_TMR_DRIVER_INDEX            DRV_TMR_INDEX_0
@@ -218,7 +220,7 @@ extern "C" {
 #define DRV_TMR_ASYNC_WRITE_ENABLE_IDX0     false
 #define DRV_TMR_POWER_STATE_IDX0            SYS_MODULE_POWER_RUN_FULL
 
- 
+
 /*** NVM Driver Configuration ***/
 
 #define DRV_NVM_INSTANCES_NUMBER     	1
@@ -308,8 +310,8 @@ extern "C" {
 
 
 /* CDC Transfer Queue Size for both read and
-   write. Applicable to all instances of the
-   function driver */
+	write. Applicable to all instances of the
+	function driver */
 #define USB_DEVICE_CDC_QUEUE_DEPTH_COMBINED 130
 
 
@@ -334,6 +336,7 @@ extern "C" {
 #define TCPIP_STACK_IF_UP_DOWN_OPERATION   true
 #define TCPIP_STACK_MAC_DOWN_OPERATION  true
 #define TCPIP_STACK_CONFIGURATION_SAVE_RESTORE   true
+
 /*** TCPIP Heap Configuration ***/
 #define TCPIP_STACK_USE_INTERNAL_HEAP
 #define TCPIP_STACK_DRAM_SIZE                       39250
