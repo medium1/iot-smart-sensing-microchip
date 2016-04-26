@@ -77,15 +77,22 @@ extern "C" {
 //#define AWS_IOT_PORT 8883 // M1 Comment
 #define AWS_IOT_PORT 61620
     
-#define NVM_CLIENT_CERTIFICATE_SPACE    (32 * 1024)
-#define NVM_CLIENT_KEY_SPACE            (16 * 1024)
-#define NVM_HOST_ADDRESS_SPACE          (64 * 1024)
-#define NVM_PROJECT_MQTT_ID_SPACE       (NVM_HOST_ADDRESS_SPACE+256)
-#define NVM_USER_MQTT_ID_SPACE          (NVM_PROJECT_MQTT_ID_SPACE+256)
-#define NVM_API_KEY_SPACE               (NVM_USER_MQTT_ID_SPACE+256)
-#define NVM_API_PASSWORD_SPACE          (NVM_API_KEY_SPACE+256)
-#define NVM_DEVICE_NAME_SPACE           (NVM_API_PASSWORD_SPACE+256)
-#define NVM_SENSOR_TYPE_SPACE           (NVM_DEVICE_NAME_SPACE+256)
+//#define NVM_CLIENT_CERTIFICATE_SPACE    (32 * 1024)
+//#define NVM_CLIENT_KEY_SPACE            (16 * 1024)
+
+#define NVM_CONFIGURATION_SPACE (16 * 1024)
+    
+#define NVM_HOST_ADDRESS_OFFSET             (0 * 256)
+#define NVM_PROJECT_MQTT_ID_OFFSET          (1 * 256)
+#define NVM_USER_MQTT_ID_OFFSET             (2 * 256)
+#define NVM_API_KEY_OFFSET                  (3 * 256)
+#define NVM_API_PASSWORD_OFFSET             (4 * 256)
+#define NVM_DEVICE_NAME_OFFSET              (5 * 256)
+#define NVM_SENSOR_TYPE_OFFSET              (6 * 256)
+#define NVM_CONFIGURATION_SIGNATURE_OFFSET  (7 * 256)
+    
+#define NVM_CONFIGURATION_SIZE  (8*256)
+
     
 /* Application Codes */
 enum AppCodes {
@@ -162,10 +169,10 @@ typedef struct
     unsigned char uuid[12 + 1];
     
     // Client certificate location
-    __attribute__ ((aligned(4))) unsigned char clientCert[2048];
+    //__attribute__ ((aligned(4))) unsigned char clientCert[2048];
     
     // Client key location
-    __attribute__ ((aligned(4))) unsigned char clientKey[2048];
+    //__attribute__ ((aligned(4))) unsigned char clientKey[2048];
     
     // Network handles
     NET_PRES_SKT_HANDLE_T socket;
@@ -181,11 +188,12 @@ typedef struct
     unsigned char api_key[256];
     unsigned char api_password[256];
     unsigned char device_name[256];
+    APP_SENSOR_TYPE app_sensor_type;
+    
     unsigned char username[256];
     unsigned char password[256];
     unsigned char publish_topic_name[256];
     unsigned char subscribe_topic_name[256];
-    APP_SENSOR_TYPE app_sensor_type;
     
     // The AWS endpoint IP address location
     IP_MULTI_ADDRESS  host_ipv4;

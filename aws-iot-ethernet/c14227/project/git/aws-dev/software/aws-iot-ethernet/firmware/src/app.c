@@ -87,13 +87,16 @@ extern BSP_DATA bspData;
 char topic_awsUpdate[128];
 char topic_awsUpdateDelta[128];
 
+#define APP_CONFIGURATION_SIGNATURE "Saritasa - ECM Develop Kit configuration"
 #define MQTT_DEFAULT_CMD_TIMEOUT_MS 10000
 #define MAX_BUFFER_SIZE 1024
 #define MAX_PACKET_ID 65536
 #define KEEP_ALIVE 900
 #define SEND_SENSORS_DATA 60
 
-
+unsigned char configurationSignature[256];
+unsigned char configuration[NVM_CONFIGURATION_SIZE];
+    
 char txBuffer[MAX_BUFFER_SIZE];
 char rxBuffer[MAX_BUFFER_SIZE];
 
@@ -434,6 +437,126 @@ const char* APP_ReturnCodeToString(int return_code)
     return "Unknown";
 }
 
+void APP_UpdateMQTTLoginInfo()
+{
+    sprintf(appData.username, "%s/%s", appData.project_mqtt_id, appData.user_mqtt_id);
+    sprintf(appData.password, "%s/%s", appData.api_key, appData.api_password);
+    //sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
+    //sprintf(appData.subscribe_topic_name, "1/%s/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
+    sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.device_name);
+    sprintf(appData.subscribe_topic_name, "1/%s/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id, appData.device_name);
+}
+
+_Bool APP_LoadConfiguration ( void )
+{
+    SYS_CONSOLE_MESSAGE("App:  Loading configuration from NVM\r\n");
+    
+    XMEMSET(appData.host, 0, sizeof(appData.host));
+    XMEMSET(appData.project_mqtt_id, 0, sizeof(appData.project_mqtt_id));
+    XMEMSET(appData.user_mqtt_id, 0, sizeof(appData.user_mqtt_id));
+    XMEMSET(appData.api_key, 0, sizeof(appData.api_key));
+    XMEMSET(appData.api_password, 0, sizeof(appData.api_password));
+    XMEMSET(appData.device_name, 0, sizeof(appData.device_name));
+    XMEMSET(&appData.app_sensor_type, 0, sizeof(appData.app_sensor_type));
+    XMEMSET(configurationSignature, 0, sizeof(configurationSignature));
+    
+    _Bool ret = APP_NVM_Read(NVM_CONFIGURATION_SPACE, configuration, NVM_CONFIGURATION_SIZE);
+    memcpy(appData.host, configuration+NVM_HOST_ADDRESS_OFFSET, sizeof(appData.host)-1);
+    memcpy(appData.project_mqtt_id, configuration+NVM_PROJECT_MQTT_ID_OFFSET, sizeof(appData.project_mqtt_id)-1);
+    memcpy(appData.user_mqtt_id, configuration+NVM_USER_MQTT_ID_OFFSET, sizeof(appData.user_mqtt_id)-1);
+    memcpy(appData.api_key, configuration+NVM_API_KEY_OFFSET, sizeof(appData.api_key)-1);
+    memcpy(appData.api_password, configuration+NVM_API_PASSWORD_OFFSET, sizeof(appData.api_password)-1);
+    memcpy(appData.device_name, configuration+NVM_DEVICE_NAME_OFFSET, sizeof(appData.device_name)-1);
+    memcpy(&appData.app_sensor_type, configuration+NVM_SENSOR_TYPE_OFFSET, sizeof(appData.app_sensor_type));
+    memcpy(configurationSignature, configuration+NVM_CONFIGURATION_SIGNATURE_OFFSET, sizeof(configurationSignature)-1);
+          
+    /*
+    SYS_CONSOLE_PRINT("App:  Read configuration - host '%s'\r\n", appData.host);
+    SYS_CONSOLE_PRINT("App:  Read configuration - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
+    SYS_CONSOLE_PRINT("App:  Read configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
+    SYS_CONSOLE_PRINT("App:  Read configuration - api_key '%s'\r\n", "********");
+    SYS_CONSOLE_PRINT("App:  Read configuration - api_password '%s'\r\n", "********");
+    //SYS_CONSOLE_PRINT("App:  Read configuration - api_key '%s'\r\n", appData.api_key);
+    //SYS_CONSOLE_PRINT("App:  Read configuration - api_password '%s'\r\n", appData.api_password);
+    SYS_CONSOLE_PRINT("App:  Read configuration - device_name '%s'\r\n", appData.device_name);
+    SYS_CONSOLE_PRINT("App:  Read configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
+    SYS_CONSOLE_PRINT("App:  Read configuration - Configuration signature '%s'\r\n", configurationSignature);
+    */
+    
+    if (!strcmp(configurationSignature, APP_CONFIGURATION_SIGNATURE) &&
+        appData.host[0] &&
+        appData.project_mqtt_id[0] &&
+        appData.user_mqtt_id[0] &&
+        appData.api_key[0] &&
+        appData.api_password[0] &&
+        appData.device_name[0])
+    {
+        APP_UpdateMQTTLoginInfo();
+        
+        SYS_CONSOLE_PRINT("App:  Found configuration - host '%s'\r\n", appData.host);
+        SYS_CONSOLE_PRINT("App:  Found configuration - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
+        SYS_CONSOLE_PRINT("App:  Found configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
+        SYS_CONSOLE_PRINT("App:  Found configuration - api_key '%s'\r\n", "********");
+        SYS_CONSOLE_PRINT("App:  Found configuration - api_password '%s'\r\n", "********");
+        SYS_CONSOLE_PRINT("App:  Found configuration - device_name '%s'\r\n", appData.device_name);
+        SYS_CONSOLE_PRINT("App:  Found configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
+    }
+    else 
+    {
+        appData.host[0] = 0;
+        appData.project_mqtt_id[0] = 0;
+        
+        ret = false;
+    }
+
+    return ret;
+}
+
+void APP_SaveConfiguration ( void )
+{
+    strcpy(configurationSignature, APP_CONFIGURATION_SIGNATURE);
+    XMEMSET(configuration, 0, NVM_CONFIGURATION_SIZE);
+    
+    memcpy(configuration+NVM_HOST_ADDRESS_OFFSET, appData.host, sizeof(appData.host)-1);
+    memcpy(configuration+NVM_PROJECT_MQTT_ID_OFFSET, appData.project_mqtt_id, sizeof(appData.project_mqtt_id)-1);
+    memcpy(configuration+NVM_USER_MQTT_ID_OFFSET, appData.user_mqtt_id, sizeof(appData.user_mqtt_id)-1);
+    memcpy(configuration+NVM_API_KEY_OFFSET, appData.api_key, sizeof(appData.api_key)-1);
+    memcpy(configuration+NVM_API_PASSWORD_OFFSET, appData.api_password, sizeof(appData.api_password)-1);
+    memcpy(configuration+NVM_DEVICE_NAME_OFFSET, appData.device_name, sizeof(appData.device_name)-1);
+    memcpy(configuration+NVM_SENSOR_TYPE_OFFSET, &appData.app_sensor_type, sizeof(appData.app_sensor_type));
+    memcpy(configuration+NVM_CONFIGURATION_SIGNATURE_OFFSET, configurationSignature, sizeof(appData.api_password)-1);
+    
+    _Bool ret = APP_NVM_Write(NVM_CONFIGURATION_SPACE, configuration);
+    if (ret)
+    {
+        SYS_CONSOLE_MESSAGE("App:  Writing configuration to NVM - success\r\n");
+    } else{
+        SYS_CONSOLE_MESSAGE("App:  Writing configuration to NVM - failed\r\n");
+        while(1);
+    }
+    
+    SYS_CONSOLE_PRINT("App:  Configured host - '%s'\r\n", appData.host);
+    SYS_CONSOLE_PRINT("App:  Configured host - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
+    SYS_CONSOLE_PRINT("App:  Configured host - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
+    SYS_CONSOLE_PRINT("App:  Configured host - api_key '%s'\r\n", "********");
+    SYS_CONSOLE_PRINT("App:  Configured host - api_password '%s'\r\n", "********");
+    //SYS_CONSOLE_PRINT("App:  Configured host - api_key '%s'\r\n", appData.api_key);
+    //SYS_CONSOLE_PRINT("App:  Configured host - api_password '%s'\r\n", appData.api_password);
+    SYS_CONSOLE_PRINT("App:  Configured host - device_name '%s'\r\n", appData.device_name);
+    SYS_CONSOLE_PRINT("App:  Configured host - sensor_type '%d'\r\n", appData.app_sensor_type);
+    
+    APP_UpdateMQTTLoginInfo();
+}
+
+void APP_EraseConfiguration ( void )
+{
+    appData.host[0] = 0;
+    APP_NVM_Erase(NVM_CONFIGURATION_SPACE);
+    SYS_CONSOLE_MESSAGE("************************************\r\n"
+                        "App:  Erasing configuration!\r\n"
+                        "************************************\r\n");
+}
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Initialization and State Machine Functions
@@ -452,7 +575,7 @@ void APP_Initialize ( void )
 {
     /* Place the App state machine in its initial state. */
     appData.state = APP_STATE_INIT;
-    memset(appData.host, '\0', sizeof(appData.host));
+    XMEMSET(appData.host, '\0', sizeof(appData.host));
     appData.port = AWS_IOT_PORT;
     
     // Initialize MQTT net callbacks
@@ -525,20 +648,7 @@ void APP_Tasks ( void )
         {
             if((BSP_SWITCH_StateGet(BSP_SWITCH_3_CHANNEL, BSP_SWITCH_3_PORT) == BSP_SWITCH_STATE_ASSERTED) 
              && (BSP_SWITCH_StateGet(BSP_SWITCH_2_CHANNEL, BSP_SWITCH_2_PORT) == BSP_SWITCH_STATE_ASSERTED)){
-                //APP_NVM_Erase(NVM_HOST_ADDRESS_SPACE);
-                memset(appData.host, 0, sizeof(appData.host));
-                APP_NVM_Write(NVM_HOST_ADDRESS_SPACE, appData.host);
-                APP_NVM_Write(NVM_PROJECT_MQTT_ID_SPACE, appData.project_mqtt_id);
-                APP_NVM_Write(NVM_USER_MQTT_ID_SPACE, appData.user_mqtt_id);
-                APP_NVM_Write(NVM_API_KEY_SPACE, appData.api_key);
-                APP_NVM_Write(NVM_API_PASSWORD_SPACE, appData.api_password);
-                APP_NVM_Write(NVM_DEVICE_NAME_SPACE, appData.device_name);
-                APP_NVM_Write(NVM_SENSOR_TYPE_SPACE, &appData.app_sensor_type);
-                APP_NVM_Erase(NVM_CLIENT_CERTIFICATE_SPACE);
-                APP_NVM_Erase(NVM_CLIENT_KEY_SPACE);
-                SYS_CONSOLE_MESSAGE("************************************\r\n"
-                                    "App:  Erasing host and certificates!\r\n"
-                                    "************************************\r\n");
+                APP_EraseConfiguration();
                 appData.state = APP_TCPIP_WAIT_INIT;
                 break;
             }
@@ -549,29 +659,7 @@ void APP_Tasks ( void )
         // Load the configuration stored in NVM on powerup
         case APP_NVM_LOAD_CONFIGURATION:
         {
-            SYS_CONSOLE_MESSAGE("App:  Loading configuration from NVM\r\n");
-            APP_NVM_Read(NVM_HOST_ADDRESS_SPACE, appData.host, sizeof(appData.host));
-            APP_NVM_Read(NVM_PROJECT_MQTT_ID_SPACE, appData.project_mqtt_id, sizeof(appData.project_mqtt_id));
-            APP_NVM_Read(NVM_USER_MQTT_ID_SPACE, appData.user_mqtt_id, sizeof(appData.user_mqtt_id));
-            APP_NVM_Read(NVM_API_KEY_SPACE, appData.api_key, sizeof(appData.api_key));
-            APP_NVM_Read(NVM_API_PASSWORD_SPACE, appData.api_password, sizeof(appData.api_password));
-            APP_NVM_Read(NVM_DEVICE_NAME_SPACE, appData.device_name, sizeof(appData.device_name));
-            APP_NVM_Read(NVM_SENSOR_TYPE_SPACE, &appData.app_sensor_type, sizeof(appData.app_sensor_type));
-            APP_NVM_Read(NVM_CLIENT_CERTIFICATE_SPACE, appData.clientCert, sizeof(appData.clientCert));
-            APP_NVM_Read(NVM_CLIENT_KEY_SPACE, appData.clientKey, sizeof(appData.clientKey));
-            if (appData.host[0] != '\0' &&
-                appData.project_mqtt_id[0] != '\0' &&
-                appData.user_mqtt_id[0] != '\0' &&
-                appData.api_key[0] != '\0' &&
-                appData.api_password[0] != '\0' &&
-                appData.device_name[0] != '\0')
-            {
-                validConfig = 1;
-                sprintf(appData.username, "%s/%s", appData.project_mqtt_id, appData.user_mqtt_id);
-                sprintf(appData.password, "%s/%s", appData.api_key, appData.api_password);
-                sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
-                sprintf(appData.subscribe_topic_name, "1/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
-            }
+            validConfig = APP_LoadConfiguration();
             appData.state = APP_TCPIP_WAIT_INIT;
             break;
         }
@@ -631,13 +719,6 @@ void APP_Tasks ( void )
                             ,NULL);      
                 }
                 
-                // Here we build our Update and Delta topic strings using the boards unique MAC address
-                sprintf(topic_awsUpdateDelta, "$aws/things/%02x%02x%02x%02x%02x%02x/shadow/update/delta\0", 
-                    appData.macAddress.v[0], appData.macAddress.v[1], appData.macAddress.v[2],
-                    appData.macAddress.v[3], appData.macAddress.v[4], appData.macAddress.v[5]);
-                sprintf(topic_awsUpdate, "$aws/things/%02x%02x%02x%02x%02x%02x/shadow/update\0", 
-                    appData.macAddress.v[0], appData.macAddress.v[1], appData.macAddress.v[2],
-                    appData.macAddress.v[3], appData.macAddress.v[4], appData.macAddress.v[5]);
                 appData.state = APP_TCPIP_WAIT_FOR_IP;
             }
             break;
@@ -673,43 +754,15 @@ void APP_Tasks ( void )
         
         case APP_TCPIP_WAIT_CONFIGURATION:
         {
-            if(appData.host[0] == '\0'){    
+            if(!appData.host[0] || !appData.project_mqtt_id[0]){    
                 break;
             }
             else {
                 if(validConfig == 0){    
                     SYS_CONSOLE_MESSAGE("App:  Received configuration from webpage, writing to NVM...\r\n");
-                    if (APP_NVM_Write(NVM_HOST_ADDRESS_SPACE, appData.host) &&
-                        APP_NVM_Write(NVM_PROJECT_MQTT_ID_SPACE, appData.project_mqtt_id) &&
-                        APP_NVM_Write(NVM_USER_MQTT_ID_SPACE, appData.user_mqtt_id) &&
-                        APP_NVM_Write(NVM_API_KEY_SPACE, appData.api_key) &&
-                        APP_NVM_Write(NVM_API_PASSWORD_SPACE, appData.api_password) &&
-                        APP_NVM_Write(NVM_DEVICE_NAME_SPACE, appData.device_name) &&
-                        APP_NVM_Write(NVM_SENSOR_TYPE_SPACE, &appData.app_sensor_type) &&
-                        APP_NVM_Write(NVM_CLIENT_CERTIFICATE_SPACE, appData.clientCert) &&
-                        APP_NVM_Write(NVM_CLIENT_KEY_SPACE, appData.clientKey)){
-                        SYS_CONSOLE_MESSAGE("App:  Writing configuration to NVM - success\r\n");
-                    } else{
-                        SYS_CONSOLE_MESSAGE("App:  Writing configuration to NVM - failed\r\n");
-                        while(1);
-                    }
-                    SYS_CONSOLE_PRINT("App:  Configured host '%s'\r\n", appData.host);
-                } else if(validConfig){
-                    SYS_CONSOLE_PRINT("App:  Found configuration - host '%s'\r\n", appData.host);
-                    SYS_CONSOLE_PRINT("App:  Found configuration - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
-                    SYS_CONSOLE_PRINT("App:  Found configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
-                    SYS_CONSOLE_PRINT("App:  Found configuration - api_key '%s'\r\n", appData.api_key);
-                    SYS_CONSOLE_PRINT("App:  Found configuration - api_password '%s'\r\n", appData.api_password);
-                    SYS_CONSOLE_PRINT("App:  Found configuration - device_name '%s'\r\n", appData.device_name);
-                    SYS_CONSOLE_PRINT("App:  Found configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
-                    
-                    sprintf(appData.username, "%s/%s", appData.project_mqtt_id, appData.user_mqtt_id);
-                    sprintf(appData.password, "%s/%s", appData.api_key, appData.api_password);
-                    //sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
-                    //sprintf(appData.subscribe_topic_name, "1/%s/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
-                    sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.device_name);
-                    sprintf(appData.subscribe_topic_name, "1/%s/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id, appData.device_name);
-                }
+                    APP_SaveConfiguration();
+                } 
+                
                 appData.lightShowVal = BSP_LED_ALL_GOOD;
                 xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);  
                 TCPIP_NET_HANDLE    netH;
@@ -726,8 +779,6 @@ void APP_Tasks ( void )
             appData.state = APP_TCPIP_MQTT_INIT;
             break;
         }
-        
-
                 
         case APP_TCPIP_MQTT_INIT:
         {
