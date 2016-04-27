@@ -84,8 +84,7 @@ APP_DATA appData;
 extern APP1_DATA app1Data;
 extern BSP_DATA bspData;
 
-char topic_awsUpdate[128];
-char topic_awsUpdateDelta[128];
+char topic_mqtt_event[256];
 
 #define APP_CONFIGURATION_SIGNATURE "Saritasa - ECM Develop Kit configuration"
 #define MQTT_DEFAULT_CMD_TIMEOUT_MS 10000
@@ -253,72 +252,76 @@ const char* APP_Switch_Publish_Helper(BSP_SWITCH_ENUM sw){
     }
 }
 
-int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, byte msg_done){
-    char payload[MAX_BUFFER_SIZE];
-    memcpy(payload, msg->buffer, msg->total_len);
-    payload[msg->total_len] = '\0';
-    SYS_CONSOLE_PRINT("\r\nApp:  MQTT.Message Received: %s -- Topic %*.*s\r\n\r\n", payload, msg->topic_name_len, msg->topic_name_len, msg->topic_name);
+void process_led_update_command(JSON_Object* tObject)
+{
+    SYS_CONSOLE_PRINT("Processing led_state update command.\r\n");
     
-    appData.lightShowVal = BSP_LED_RX;
-    xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
+    const char* value = json_object_dotget_string(tObject, "led_state.led_1");
+    if (value)
+    {
+        appData.led1 = true;
+        if (!strcmp(value, "on"))
+        {
+            BSP_LEDOn(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
+            appData.led1val = true;
+        }
+        else if (!strcmp(value, "off"))
+        {
+            BSP_LEDOff(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
+            appData.led1val = false;
+        }
+    }
+
+    value = json_object_dotget_string(tObject, "led_state.led_2");
+    if (value)
+    {
+        appData.led2 = true;
+        if (!strcmp(value, "on"))
+        {
+            BSP_LEDOn(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
+            appData.led2val = true;
+        }
+        else if (!strcmp(value, "off"))
+        {
+            BSP_LEDOff(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
+            appData.led2val = false;
+        }
+    }
+
+    value = json_object_dotget_string(tObject, "led_state.led_3");
+    if (value)
+    {
+        appData.led3 = true;
+        if (!strcmp(value, "on"))
+        {
+            BSP_LEDOn(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
+            appData.led3val = true;
+        }
+        else if (!strcmp(value, "off"))
+        {
+            BSP_LEDOff(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
+            appData.led3val = false;
+        }
+    }
+
+    value = json_object_dotget_string(tObject, "led_state.led_4");
+    if (value)
+    {
+        appData.led4 = true;
+        if (!strcmp(value, "on"))
+        {
+            BSP_LEDOn(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
+            appData.led4val = true;
+        }
+        else if (!strcmp(value, "off"))
+        {
+            BSP_LEDOff(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
+            appData.led4val = false;
+        }
+    }
     
-    // If the topic matches our AWS IoT delta topic
-    if(strncmp(topic_awsUpdateDelta, msg->topic_name, strlen(topic_awsUpdateDelta)) == 0){
-        JSON_Value *root_value = json_parse_string(payload);
-        if (json_value_get_type(root_value) != JSONObject)
-            return;
-        JSON_Object * tObject = json_value_get_object(root_value);
-        
-        if(json_object_dotget_string(tObject, "state.led1") != NULL)
-        {
-            appData.led1 = true;
-            if(strcmp(json_object_dotget_string(tObject, "state.led1"), "on") == 0){
-                BSP_LEDOn(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
-                appData.led1val = true;
-            }
-            else if (strcmp(json_object_dotget_string(tObject, "state.led1"), "off") == 0){
-                BSP_LEDOff(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
-                appData.led1val = false;
-            }
-        }
-        if(json_object_dotget_string(tObject, "state.led2") != NULL)
-        {
-            appData.led2 = true;
-            if(strcmp(json_object_dotget_string(tObject, "state.led2"), "on") == 0){
-                BSP_LEDOn(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
-                appData.led2val = true;
-            }
-            else if (strcmp(json_object_dotget_string(tObject, "state.led2"), "off") == 0){
-                BSP_LEDOff(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
-                appData.led2val = false;
-            }
-        }
-        if(json_object_dotget_string(tObject, "state.led3") != NULL)
-        {
-            appData.led3 = true;
-            if(strcmp(json_object_dotget_string(tObject, "state.led3"), "on") == 0){
-                BSP_LEDOn(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
-                appData.led3val = true;
-            }
-            else if (strcmp(json_object_dotget_string(tObject, "state.led3"), "off") == 0){
-                BSP_LEDOff(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
-                appData.led3val = false;
-            }
-        }
-        if(json_object_dotget_string(tObject, "state.led4") != NULL)
-        {
-            appData.led4 = true;
-            if(strcmp(json_object_dotget_string(tObject, "state.led4"), "on") == 0){
-                BSP_LEDOn(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
-                appData.led4val = true;
-            }
-            else if (strcmp(json_object_dotget_string(tObject, "state.led4"), "off") == 0){
-                BSP_LEDOff(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
-                appData.led4val = false;
-            }
-        }
-        
-        //Got LED Values now we send our reported LED values
+    /*
+    //Got LED Values now we send our reported LED values
         JSON_Value *root_value_publish = json_value_init_object();
         JSON_Object *root_object_publish = json_value_get_object(root_value_publish);
         char *serialized_string = NULL;
@@ -344,7 +347,7 @@ int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, by
         strcpy(reportedPayload, serialized_string);
         json_free_serialized_string(serialized_string);
         
-        /* Publish Topic */
+        // Publish Topic 
         MqttPublish publish;
         int rc;
         XMEMSET(&publish, 0, sizeof(MqttPublish));
@@ -368,11 +371,67 @@ int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, by
     
         json_value_free(root_value);
         json_value_free(root_value_publish);
+     */
+}
 
+void process_sensor_config_update_command(JSON_Object* tObject)
+{
+    SYS_CONSOLE_PRINT("Processing sensor_profiles update command.\r\n");
+}
+
+int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, byte msg_done)
+{
+    int ret = MQTT_CODE_SUCCESS;
+    char payload[MAX_BUFFER_SIZE];
+    memcpy(payload, msg->buffer, msg->total_len);
+    payload[msg->total_len] = '\0';
+    SYS_CONSOLE_PRINT("\r\nApp:  MQTT.Message Received: %s -- Topic %s\r\n\r\n", payload, msg->topic_name);
+    
+    /*
+    // Temporary fix JSON parse error by remove u' prefix. This may not safe with some certain payload data.
+    int i=1;
+    for (; i<msg->total_len; i++)
+    {
+        if ((payload[i-1]=='{'||payload[i-1]=='['||payload[i-1]==' '||payload[i-1]=='\t') &&
+            payload[i]=='u' &&
+            (payload[i+1] == '\'' || payload[i+1] == '\"'))
+        {
+            payload[i] = ' ';
+        }
+        
+        if (payload[i]=='\'')
+        {
+            payload[i] = '\"';
+        }
+    }
+    */ 
+    
+    
+    SYS_CONSOLE_PRINT("\r\nApp:  MQTT.Message Received: %s -- Topic %s\r\n\r\n", payload, msg->topic_name);
+    
+    appData.lightShowVal = BSP_LED_RX;
+    xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
+    
+    // If the topic matches our AWS IoT delta topic
+    if (!strncmp(topic_mqtt_event, msg->topic_name, msg->topic_name_len))
+    {
+        JSON_Value *root_value = json_parse_string(payload);
+        if (json_value_get_type(root_value) != JSONObject)
+            return ret;
+        
+        JSON_Object * tObject = json_value_get_object(root_value);
+        
+        if (json_object_get_value(tObject, "led_state"))
+        {
+            process_led_update_command(tObject);
+        }
+        else if (json_object_get_value(tObject, "sensor_profiles"))
+        {
+            process_sensor_config_update_command(tObject);
+        }
     }   
     
-    
-    return 0;
+    return ret;
 }
 
 // *****************************************************************************
@@ -441,10 +500,10 @@ void APP_UpdateMQTTLoginInfo()
 {
     sprintf(appData.username, "%s/%s", appData.project_mqtt_id, appData.user_mqtt_id);
     sprintf(appData.password, "%s/%s", appData.api_key, appData.api_password);
-    //sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
-    //sprintf(appData.subscribe_topic_name, "1/%s/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
     sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.device_name);
-    sprintf(appData.subscribe_topic_name, "1/%s/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id, appData.device_name);
+    sprintf(appData.subscribe_topic_name, "1/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id);
+    sprintf(topic_mqtt_event, "1/%s/%s//event", appData.project_mqtt_id, appData.user_mqtt_id);
+    //sprintf(appData.subscribe_topic_name, "2/%s/group0/time/#", appData.project_mqtt_id);
 }
 
 _Bool APP_LoadConfiguration ( void )
