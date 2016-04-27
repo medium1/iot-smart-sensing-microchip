@@ -170,7 +170,18 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     bool bConfigFailure = false;
     uint32_t byteCount;
     TCP_SOCKET sktHTTP;
-
+    
+    char host[256] = "";
+    char project_mqtt_id[256]  = "";
+    char user_mqtt_id[256] = "";
+    char device_name[256] = "";
+    char api_key[256] = "";
+    char api_password[256] = "";
+    APP_SENSOR_TYPE app_sensor_type;
+    
+    char clientCert[2048];
+    char clientKey[2048];
+    
     byteCount = TCPIP_HTTP_CurrentConnectionByteCountGet(connHandle);
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
     if(byteCount > TCPIP_TCP_GetIsReady(sktHTTP) + TCPIP_TCP_FifoRxFreeGet(sktHTTP))
@@ -208,38 +219,38 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         }
 
         // Default MQTT host
-        strcpy(appData.host, "mqtt.mediumone.com");
+        strcpy(host, "mqtt.mediumone.com");
                 
         // Parse the value that was read
         if(!strcmp((char*)httpDataBuff, (const char*)"mqtt_host"))
         {
-            memcpy((uint8_t *)appData.host, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            appData.host[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */        
+            memcpy((uint8_t *)host, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
+            host[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */        
         }
         else if(!strcmp((char*)httpDataBuff, (const char*)"project_mqtt_id"))
         {
-            memcpy((uint8_t *)appData.project_mqtt_id, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            appData.project_mqtt_id[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
+            memcpy((uint8_t *)project_mqtt_id, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
+            project_mqtt_id[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
         }
         else if(!strcmp((char*)httpDataBuff, (const char*)"user_mqtt_id"))
         {
-            memcpy((uint8_t *)appData.user_mqtt_id, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            appData.user_mqtt_id[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
+            memcpy((uint8_t *)user_mqtt_id, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
+            user_mqtt_id[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
         }
         else if(!strcmp((char*)httpDataBuff, (const char*)"api_key"))
         {
-            memcpy((uint8_t *)appData.api_key, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            appData.api_key[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
+            memcpy((uint8_t *)api_key, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
+            api_key[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
         }
         else if(!strcmp((char*)httpDataBuff, (const char*)"api_password"))
         {
-            memcpy((uint8_t *)appData.api_password, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            appData.api_password[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
+            memcpy((uint8_t *)api_password, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
+            api_password[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
         }
         else if(!strcmp((char*)httpDataBuff, (const char*)"device_name"))
         {
-            memcpy((uint8_t *)appData.device_name, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            appData.device_name[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
+            memcpy((uint8_t *)device_name, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
+            device_name[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
         }
         else if(!strcmp((char*)httpDataBuff, (const char*)"sensor_type"))
         {
@@ -249,37 +260,68 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
             
             if(!strcmp(sSensor_type, (const char*)"none"))
             {
-                appData.app_sensor_type = APP_SENSOR_TYPE_NONE;
+                app_sensor_type = APP_SENSOR_TYPE_NONE;
             }
             else if(!strcmp(sSensor_type, (const char*)"pressure_click"))
             {
-                appData.app_sensor_type = APP_SENSOR_TYPE_PRESSURE_CLICK;
+                app_sensor_type = APP_SENSOR_TYPE_PRESSURE_CLICK;
             }
             else if(!strcmp(sSensor_type, (const char*)"air_quality_click"))
             {
-                appData.app_sensor_type = APP_SENSOR_TYPE_AIR_QUALITY_CLICK;
+                app_sensor_type = APP_SENSOR_TYPE_AIR_QUALITY_CLICK;
             }
             else if(!strcmp(sSensor_type, (const char*)"humidity_click"))
             {
-                appData.app_sensor_type = APP_SENSOR_TYPE_HUMIDITY_CLICK;
+                app_sensor_type = APP_SENSOR_TYPE_HUMIDITY_CLICK;
             }
             else if(!strcmp(sSensor_type, (const char*)"motion_click"))
             {
-                appData.app_sensor_type = APP_SENSOR_TYPE_MOTION_CLICK;
+                app_sensor_type = APP_SENSOR_TYPE_MOTION_CLICK;
+            }
+            else 
+            {
+                bConfigFailure = true;
             }
         }
         else if(!strcmp((char*)httpDataBuff, (const char*)"cc"))
         {
-            memcpy((uint8_t *)appData.clientCert, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            appData.clientCert[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
+            memcpy((uint8_t *)clientCert, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
+            clientCert[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
         }
         else if(!strcmp((char*)httpDataBuff, (const char*)"ck"))
         {
-            memcpy((uint8_t *)appData.clientKey, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            appData.clientKey[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
+            memcpy((uint8_t *)clientKey, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
+            clientKey[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
         }
     }
 
+    SYS_CONSOLE_PRINT("Web submit configuration - host '%s'\r\n", host);
+    SYS_CONSOLE_PRINT("Web submit configuration - project_mqtt_id '%s'\r\n", project_mqtt_id);
+    SYS_CONSOLE_PRINT("Web submit configuration - user_mqtt_id '%s'\r\n", user_mqtt_id);
+    SYS_CONSOLE_PRINT("Web submit configuration - api_key '%s'\r\n", "********");
+    SYS_CONSOLE_PRINT("Web submit configuration - api_password '%s'\r\n", "********");
+    //SYS_CONSOLE_PRINT("Web submit configuration - api_key '%s'\r\n", api_key);
+    //SYS_CONSOLE_PRINT("Web submit configuration - api_password '%s'\r\n", api_password);
+    SYS_CONSOLE_PRINT("Web submit configuration - device_name '%s'\r\n", device_name);
+    SYS_CONSOLE_PRINT("Web submit configuration - sensor_type '%d'\r\n", app_sensor_type);
+        
+    if (host[0] && project_mqtt_id[0] && user_mqtt_id[0] && api_key[0] && api_password[0] && device_name[0])
+    {
+        strcpy(appData.host, host);
+        strcpy(appData.project_mqtt_id, project_mqtt_id);
+        strcpy(appData.user_mqtt_id, user_mqtt_id);
+        strcpy(appData.api_key, api_key);
+        strcpy(appData.api_password, api_password);
+        strcpy(appData.device_name, device_name);
+        appData.app_sensor_type = app_sensor_type;
+
+        //TODO: Check is it safe if we force change state like this to support configure modify on fly
+        appData.state = APP_TCPIP_WAIT_CONFIGURATION;
+    }
+    else {
+        bConfigFailure = true;
+    }
+    
     if(bConfigFailure == false)
     {
         // All parsing complete!  Save new settings and force an interface restart
@@ -291,11 +333,9 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
             if(httpDataBuff[i] == ' ')
                 httpDataBuff[i] = 0x00;
         }
-
     }
     else
     {   // Configuration error
-
         lastFailure = true;
         if(httpDataBuff)
         {
@@ -305,24 +345,6 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
 
     TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
 
-    SYS_CONSOLE_PRINT("App configuration - host '%s'\r\n", appData.host);
-    SYS_CONSOLE_PRINT("App configuration - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
-    SYS_CONSOLE_PRINT("App configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
-    SYS_CONSOLE_PRINT("App configuration - api_key '%s'\r\n", appData.api_key);
-    SYS_CONSOLE_PRINT("App configuration - api_password '%s'\r\n", appData.api_password);
-    SYS_CONSOLE_PRINT("App configuration - device_name '%s'\r\n", appData.device_name);
-    SYS_CONSOLE_PRINT("App configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
-                            
-    sprintf(appData.username, "%s/%s", appData.project_mqtt_id, appData.user_mqtt_id);
-    sprintf(appData.password, "%s/%s", appData.api_key, appData.api_password);
-    //sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
-    sprintf(appData.publish_topic_name, "0/%s/%s/%s", appData.project_mqtt_id, appData.user_mqtt_id, appData.device_name);
-    //sprintf(appData.subscribe_topic_name, "1/%s/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id, appData.uuid);
-    sprintf(appData.subscribe_topic_name, "1/%s/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id, appData.device_name);
-
-    //TODO: Check is it safe if we force change state like this to support configure modify on fly
-    appData.state = APP_TCPIP_WAIT_CONFIGURATION;
-    
     return HTTP_IO_DONE;
 }
 
