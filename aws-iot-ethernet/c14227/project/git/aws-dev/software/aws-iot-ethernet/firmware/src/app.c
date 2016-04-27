@@ -377,6 +377,43 @@ void process_led_update_command(JSON_Object* tObject)
 void process_sensor_config_update_command(JSON_Object* tObject)
 {
     SYS_CONSOLE_PRINT("Processing sensor_profiles update command.\r\n");
+    
+    JSON_Array* sensor_profiles_value = json_object_get_array(tObject, "sensor_profiles");
+    int i = 0;
+    int nNumItems = json_array_get_count(sensor_profiles_value);
+    
+    for ( ;i<nNumItems; i++)
+    {
+        JSON_Object* sensor_profile = json_array_get_object(sensor_profiles_value, i);
+        const char* sSensor_type = json_object_get_string(sensor_profile, "sensor");
+        
+        if(!strcmp(sSensor_type, (const char*)"pressure_click"))
+        {
+            appData.pressure_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
+            appData.pressure_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
+        }
+        else if(!strcmp(sSensor_type, (const char*)"air_quality_click"))
+        {
+            appData.air_quality_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
+            appData.air_quality_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
+        }
+        else if(!strcmp(sSensor_type, (const char*)"humidity_click"))
+        {
+            appData.humidity_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
+            appData.humidity_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
+        }
+        else if(!strcmp(sSensor_type, (const char*)"temperature_click"))
+        {
+            appData.temperature_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
+            appData.temperature_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
+        }
+        else if(!strcmp(sSensor_type, (const char*)"motion_click"))
+        {
+            appData.motion_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "interval_sec") + 0.5);
+        }
+    }
+    
+    // TODO: Update sensors configuration, store to NVM
 }
 
 int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, byte msg_done)
@@ -405,9 +442,6 @@ int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, by
         }
     }
     */ 
-    
-    
-    SYS_CONSOLE_PRINT("\r\nApp:  MQTT.Message Received: %s -- Topic %s\r\n\r\n", payload, msg->topic_name);
     
     appData.lightShowVal = BSP_LED_RX;
     xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
@@ -519,6 +553,12 @@ _Bool APP_LoadConfiguration ( void )
     XMEMSET(&appData.app_sensor_type, 0, sizeof(appData.app_sensor_type));
     XMEMSET(configurationSignature, 0, sizeof(configurationSignature));
     
+    XMEMSET(&appData.pressure_click_config, 0, sizeof(APP_SENSOR_CONFIG));
+    XMEMSET(&appData.temperature_click_config, 0, sizeof(APP_SENSOR_CONFIG));
+    XMEMSET(&appData.motion_click_config, 0, sizeof(APP_SENSOR_CONFIG));
+    XMEMSET(&appData.air_quality_click_config, 0, sizeof(APP_SENSOR_CONFIG));
+    
+    
     _Bool ret = APP_NVM_Read(NVM_CONFIGURATION_SPACE, configuration, NVM_CONFIGURATION_SIZE);
     memcpy(appData.host, configuration+NVM_HOST_ADDRESS_OFFSET, sizeof(appData.host)-1);
     memcpy(appData.project_mqtt_id, configuration+NVM_PROJECT_MQTT_ID_OFFSET, sizeof(appData.project_mqtt_id)-1);
@@ -552,6 +592,8 @@ _Bool APP_LoadConfiguration ( void )
     {
         APP_UpdateMQTTLoginInfo();
         
+        // TODO: Load sensors configuration from NVM
+        
         SYS_CONSOLE_PRINT("App:  Found configuration - host '%s'\r\n", appData.host);
         SYS_CONSOLE_PRINT("App:  Found configuration - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
         SYS_CONSOLE_PRINT("App:  Found configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
@@ -584,6 +626,8 @@ void APP_SaveConfiguration ( void )
     memcpy(configuration+NVM_DEVICE_NAME_OFFSET, appData.device_name, sizeof(appData.device_name)-1);
     memcpy(configuration+NVM_SENSOR_TYPE_OFFSET, &appData.app_sensor_type, sizeof(appData.app_sensor_type));
     memcpy(configuration+NVM_CONFIGURATION_SIGNATURE_OFFSET, configurationSignature, sizeof(appData.api_password)-1);
+    
+    // TODO: write sensors configuration to NVM
     
     _Bool ret = APP_NVM_Write(NVM_CONFIGURATION_SPACE, configuration);
     if (ret)

@@ -147,6 +147,13 @@ typedef enum
     APP_SENSOR_TYPE_MOTION_CLICK
 } APP_SENSOR_TYPE;
 
+
+typedef struct
+{
+    double          threshold_pct;
+    int             period_sec;
+} APP_SENSOR_CONFIG;
+
 // *****************************************************************************
 /* Application Data
 
@@ -231,6 +238,12 @@ typedef struct
     bool led3val;
     bool led4val;
     
+    //Sensors configuration
+    APP_SENSOR_CONFIG pressure_click_config;
+    APP_SENSOR_CONFIG temperature_click_config;
+    APP_SENSOR_CONFIG humidity_click_config;
+    APP_SENSOR_CONFIG motion_click_config;
+    APP_SENSOR_CONFIG air_quality_click_config;
 } APP_DATA;
 
 
