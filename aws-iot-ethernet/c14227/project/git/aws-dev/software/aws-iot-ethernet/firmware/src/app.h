@@ -90,7 +90,19 @@ extern "C" {
 #define NVM_SENSOR_TYPE_OFFSET              (6 * 256)
 #define NVM_CONFIGURATION_SIGNATURE_OFFSET  (7 * 256)
     
-#define NVM_CONFIGURATION_SIZE  (8*256)
+#define NVM_CONFIGURATION_SIZE              (8*256)
+    
+
+    
+#define NVM_SENSORS_CONFIGURATION_SPACE (32 * 1024)
+
+#define NVM_SENSOR_CONFIG_PRESSURE_CLICK_OFFSET     (0 * sizeof(APP_SENSOR_CONFIG))
+#define NVM_SENSOR_CONFIG_TEMPERATURE_CLICK_OFFSET  (1 * sizeof(APP_SENSOR_CONFIG))
+#define NVM_SENSOR_CONFIG_HUMIDITY_CLICK_OFFSET     (2 * sizeof(APP_SENSOR_CONFIG))
+#define NVM_SENSOR_CONFIG_MOTION_CLICK_OFFSET       (3 * sizeof(APP_SENSOR_CONFIG))
+#define NVM_SENSOR_CONFIG_AIR_QUALITY_OFFSET        (4 * sizeof(APP_SENSOR_CONFIG))
+
+#define NVM_SENSORS_CONFIGURATION_SIZE              (5 * sizeof(APP_SENSOR_CONFIG))
 
     
 /* Application Codes */
@@ -195,11 +207,12 @@ typedef struct
 		unsigned char api_key[256];
 		unsigned char api_password[256];
 		unsigned char device_name[256];
+		APP_SENSOR_TYPE app_sensor_type;
+
 		unsigned char username[256];
 		unsigned char password[256];
 		unsigned char publish_topic_name[256];
 		unsigned char subscribe_topic_name[256];
-		APP_SENSOR_TYPE app_sensor_type;
 
 		// The AWS endpoint IP address location
 		IP_MULTI_ADDRESS  host_ipv4;
@@ -225,6 +238,7 @@ typedef struct
 		uint32_t timerTCPIP;
 		uint32_t mqttKeepAlive;
 		uint32_t mqttSendSensorsData;
+		uint32_t mqttSendDeviceInfo;
 
 		// Mqtt Client
 		MqttNet myNet;

@@ -90,6 +90,7 @@ extern char validConfig;
 #define MAX_PACKET_ID 65536
 #define KEEP_ALIVE 900
 #define SEND_SENSORS_DATA 60
+#define SEND_DEVICE_INFO 600
 #define TOTAL_CLICK_DEVICE 3
 #define MOTION_DURATION 60
 #define AIR_DURATION 600
@@ -146,6 +147,9 @@ unsigned int adc_rd;
 APP1_DATA app1Data;
 extern APP_DATA appData;
 extern BSP_DATA bspData;
+
+void APP_Save_SensorConfiguration ( void );
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
@@ -321,114 +325,130 @@ const char* APP_Switch_Publish_Helper(BSP_SWITCH_ENUM sw)
 
 void process_led_update_command(JSON_Object* tObject)
 {
-	SYS_CONSOLE_PRINT("Processing led_state update command.\r\n");
+    SYS_CONSOLE_PRINT("App:  Processing led_state update command.\r\n");
+    
+    appData.lightShowVal = BSP_LED_TX;
+    xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
 
-	const char* value = json_object_dotget_string(tObject, "led_state.led_1");
-	if (value)
-	{
-		appData.led1 = true;
-		if (!strcmp(value, "on"))
-		{
-			BSP_LEDOn(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
-			appData.led1val = true;
-		}
-		else if (!strcmp(value, "off"))
-		{
-			BSP_LEDOff(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
-			appData.led1val = false;
-		}
-	}
+    
+    const char* value = json_object_dotget_string(tObject, "led_state.led_1");
+    if (value)
+    {
+        appData.led1 = true;
+        if (!strcmp(value, "on"))
+        {
+            BSP_LEDOn(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
+            appData.led1val = true;
+        }
+        else if (!strcmp(value, "off"))
+        {
+            BSP_LEDOff(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
+            appData.led1val = false;
+        }
+    }
 
-	value = json_object_dotget_string(tObject, "led_state.led_2");
-	if (value)
-	{
-		appData.led2 = true;
-		if (!strcmp(value, "on"))
-		{
-			BSP_LEDOn(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
-			appData.led2val = true;
-		}
-		else if (!strcmp(value, "off"))
-		{
-			BSP_LEDOff(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
-			appData.led2val = false;
-		}
-	}
+    value = json_object_dotget_string(tObject, "led_state.led_2");
+    if (value)
+    {
+        appData.led2 = true;
+        if (!strcmp(value, "on"))
+        {
+            BSP_LEDOn(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
+            appData.led2val = true;
+        }
+        else if (!strcmp(value, "off"))
+        {
+            BSP_LEDOff(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
+            appData.led2val = false;
+        }
+    }
 
-	value = json_object_dotget_string(tObject, "led_state.led_3");
-	if (value)
-	{
-		appData.led3 = true;
-		if (!strcmp(value, "on"))
-		{
-			BSP_LEDOn(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
-			appData.led3val = true;
-		}
-		else if (!strcmp(value, "off"))
-		{
-			BSP_LEDOff(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
-			appData.led3val = false;
-		}
-	}
+    value = json_object_dotget_string(tObject, "led_state.led_3");
+    if (value)
+    {
+        appData.led3 = true;
+        if (!strcmp(value, "on"))
+        {
+            BSP_LEDOn(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
+            appData.led3val = true;
+        }
+        else if (!strcmp(value, "off"))
+        {
+            BSP_LEDOff(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
+            appData.led3val = false;
+        }
+    }
 
-	value = json_object_dotget_string(tObject, "led_state.led_4");
-	if (value)
-	{
-		appData.led4 = true;
-		if (!strcmp(value, "on"))
-		{
-			BSP_LEDOn(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
-			appData.led4val = true;
-		}
-		else if (!strcmp(value, "off"))
-		{
-			BSP_LEDOff(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
-			appData.led4val = false;
-		}
-	}
-
+    value = json_object_dotget_string(tObject, "led_state.led_4");
+    if (value)
+    {
+        appData.led4 = true;
+        if (!strcmp(value, "on"))
+        {
+            BSP_LEDOn(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
+            appData.led4val = true;
+        }
+        else if (!strcmp(value, "off"))
+        {
+            BSP_LEDOff(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
+            appData.led4val = false;
+        }
+    }
+    
+    APP_Send_DeviceInfo();
 }
 
 void process_sensor_config_update_command(JSON_Object* tObject)
 {
-	SYS_CONSOLE_PRINT("Processing sensor_profiles update command.\r\n");
-
-	JSON_Array* sensor_profiles_value = json_object_get_array(tObject, "sensor_profiles");
-	int i = 0;
-	int nNumItems = json_array_get_count(sensor_profiles_value);
-
-	for ( ;i<nNumItems; i++)
-	{
-		JSON_Object* sensor_profile = json_array_get_object(sensor_profiles_value, i);
-		const char* sSensor_type = json_object_get_string(sensor_profile, "sensor");
-
-		if (!strcmp(sSensor_type, (const char*)"pressure_click"))
-		{
-			appData.pressure_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
-			appData.pressure_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
-		}
-		else if (!strcmp(sSensor_type, (const char*)"air_quality_click"))
-		{
-			appData.air_quality_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
-			appData.air_quality_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
-		}
-		else if (!strcmp(sSensor_type, (const char*)"humidity_click"))
-		{
-			appData.humidity_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
-			appData.humidity_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
-		}
-		else if (!strcmp(sSensor_type, (const char*)"temperature_click"))
-		{
-			appData.temperature_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
-			appData.temperature_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
-		}
-		else if (!strcmp(sSensor_type, (const char*)"motion_click"))
-		{
-			appData.motion_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "interval_sec") + 0.5);
-		}
-	}
-
-	// TODO: Update sensors configuration, store to NVM
+    SYS_CONSOLE_PRINT("App:  Processing sensor_profiles update command.\r\n");
+    
+    JSON_Array* sensor_profiles_value = json_object_get_array(tObject, "sensor_profiles");
+    int i = 0;
+    int nNumItems = json_array_get_count(sensor_profiles_value);
+    
+    for ( ;i<nNumItems; i++)
+    {
+        JSON_Object* sensor_profile = json_array_get_object(sensor_profiles_value, i);
+        const char* sSensor_type = json_object_get_string(sensor_profile, "sensor");
+            
+        if(!strcmp(sSensor_type, (const char*)"pressure_click"))
+        {
+            appData.pressure_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
+            appData.pressure_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
+            SYS_CONSOLE_PRINT("\t- pressure_click_config(threshold_pct: %f, period_sec: %d)\r\n", 
+                appData.pressure_click_config.threshold_pct, appData.pressure_click_config.period_sec);
+        }
+        else if(!strcmp(sSensor_type, (const char*)"air_quality_click"))
+        {
+            appData.air_quality_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
+            appData.air_quality_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
+            SYS_CONSOLE_PRINT("\t- air_quality_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+                appData.air_quality_click_config.threshold_pct, appData.air_quality_click_config.period_sec);
+        }
+        else if(!strcmp(sSensor_type, (const char*)"humidity_click"))
+        {
+            appData.humidity_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
+            appData.humidity_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
+            SYS_CONSOLE_PRINT("\t- humidity_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+                appData.humidity_click_config.threshold_pct, appData.humidity_click_config.period_sec);
+        }
+        else if(!strcmp(sSensor_type, (const char*)"temperature_click"))
+        {
+            appData.temperature_click_config.threshold_pct = json_object_get_number(sensor_profile, "threshold_pct");
+            appData.temperature_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "period_sec") + 0.5);
+            SYS_CONSOLE_PRINT("\t- temperature_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+                appData.temperature_click_config.threshold_pct, appData.temperature_click_config.period_sec);
+        }
+        else if(!strcmp(sSensor_type, (const char*)"motion_click"))
+        {
+            appData.motion_click_config.period_sec = (int)(json_object_get_number(sensor_profile, "interval_sec") + 0.5);
+            SYS_CONSOLE_PRINT("\t- motion_click_config(interval_sec: %d)\r\n",
+                appData.motion_click_config.period_sec);
+        }
+    }
+        
+    APP_Save_SensorConfiguration();
+    // TODO: Update processing when sensors configuration change if needed
 }
 
 int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, byte msg_done)
@@ -466,7 +486,10 @@ int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, by
 	{
 		JSON_Value *root_value = json_parse_string(payload);
 		if (json_value_get_type(root_value) != JSONObject)
+		{
+			if (root_value) json_value_free(root_value);
 			return ret;
+		}
 
 		JSON_Object * tObject = json_value_get_object(root_value);
 
@@ -478,6 +501,8 @@ int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, by
 		{
 			process_sensor_config_update_command(tObject);
 		}
+
+		if (root_value) json_value_free(root_value);
 	}
 
 	return ret;
@@ -562,107 +587,239 @@ void APP_UpdateMQTTLoginInfo()
 
 _Bool APP_LoadConfiguration ( void )
 {
-	SYS_CONSOLE_MESSAGE("App:  Loading configuration from NVM\r\n");
+    SYS_CONSOLE_PRINT("App:  Loading configuration from NVM\r\n");
+    
+    XMEMSET(appData.host, 0, sizeof(appData.host));
+    XMEMSET(appData.project_mqtt_id, 0, sizeof(appData.project_mqtt_id));
+    XMEMSET(appData.user_mqtt_id, 0, sizeof(appData.user_mqtt_id));
+    XMEMSET(appData.api_key, 0, sizeof(appData.api_key));
+    XMEMSET(appData.api_password, 0, sizeof(appData.api_password));
+    XMEMSET(appData.device_name, 0, sizeof(appData.device_name));
+    XMEMSET(&appData.app_sensor_type, 0, sizeof(appData.app_sensor_type));
+    XMEMSET(configurationSignature, 0, sizeof(configurationSignature));
+    
+    _Bool ret = APP_NVM_Read(NVM_CONFIGURATION_SPACE, configuration, NVM_CONFIGURATION_SIZE);
+    memcpy(appData.host, configuration+NVM_HOST_ADDRESS_OFFSET, sizeof(appData.host)-1);
+    memcpy(appData.project_mqtt_id, configuration+NVM_PROJECT_MQTT_ID_OFFSET, sizeof(appData.project_mqtt_id)-1);
+    memcpy(appData.user_mqtt_id, configuration+NVM_USER_MQTT_ID_OFFSET, sizeof(appData.user_mqtt_id)-1);
+    memcpy(appData.api_key, configuration+NVM_API_KEY_OFFSET, sizeof(appData.api_key)-1);
+    memcpy(appData.api_password, configuration+NVM_API_PASSWORD_OFFSET, sizeof(appData.api_password)-1);
+    memcpy(appData.device_name, configuration+NVM_DEVICE_NAME_OFFSET, sizeof(appData.device_name)-1);
+    memcpy(&appData.app_sensor_type, configuration+NVM_SENSOR_TYPE_OFFSET, sizeof(appData.app_sensor_type));
+    memcpy(configurationSignature, configuration+NVM_CONFIGURATION_SIGNATURE_OFFSET, sizeof(configurationSignature)-1);
+          
+    /*
+    SYS_CONSOLE_PRINT("App:  Read configuration - host '%s'\r\n", appData.host);
+    SYS_CONSOLE_PRINT("App:  Read configuration - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
+    SYS_CONSOLE_PRINT("App:  Read configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
+    SYS_CONSOLE_PRINT("App:  Read configuration - api_key '%s'\r\n", "********");
+    SYS_CONSOLE_PRINT("App:  Read configuration - api_password '%s'\r\n", "********");
+    //SYS_CONSOLE_PRINT("App:  Read configuration - api_key '%s'\r\n", appData.api_key);
+    //SYS_CONSOLE_PRINT("App:  Read configuration - api_password '%s'\r\n", appData.api_password);
+    SYS_CONSOLE_PRINT("App:  Read configuration - device_name '%s'\r\n", appData.device_name);
+    SYS_CONSOLE_PRINT("App:  Read configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
+    SYS_CONSOLE_PRINT("App:  Read configuration - Configuration signature '%s'\r\n", configurationSignature);
+    */
+    
+    if (!strcmp(configurationSignature, APP_CONFIGURATION_SIGNATURE) &&
+        appData.host[0] &&
+        appData.project_mqtt_id[0] &&
+        appData.user_mqtt_id[0] &&
+        appData.api_key[0] &&
+        appData.api_password[0] &&
+        appData.device_name[0])
+    {
+        APP_UpdateMQTTLoginInfo();
+        
+        // Load sensors configuration
+        ret = APP_NVM_Read(NVM_SENSORS_CONFIGURATION_SPACE, configuration, NVM_SENSORS_CONFIGURATION_SIZE);
+        memcpy(&appData.pressure_click_config, configuration+NVM_SENSOR_CONFIG_PRESSURE_CLICK_OFFSET, sizeof(APP_SENSOR_CONFIG));
+        memcpy(&appData.temperature_click_config, configuration+NVM_SENSOR_CONFIG_TEMPERATURE_CLICK_OFFSET, sizeof(APP_SENSOR_CONFIG));
+        memcpy(&appData.humidity_click_config, configuration+NVM_SENSOR_CONFIG_HUMIDITY_CLICK_OFFSET, sizeof(APP_SENSOR_CONFIG));
+        memcpy(&appData.motion_click_config, configuration+NVM_SENSOR_CONFIG_MOTION_CLICK_OFFSET, sizeof(APP_SENSOR_CONFIG));
+        memcpy(&appData.air_quality_click_config, configuration+NVM_SENSOR_CONFIG_AIR_QUALITY_OFFSET, sizeof(APP_SENSOR_CONFIG));
+    
+        SYS_CONSOLE_PRINT("App:  Found configuration - host '%s'\r\n", appData.host);
+        SYS_CONSOLE_PRINT("App:  Found configuration - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
+        SYS_CONSOLE_PRINT("App:  Found configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
+        SYS_CONSOLE_PRINT("App:  Found configuration - api_key '%s'\r\n", "********");
+        SYS_CONSOLE_PRINT("App:  Found configuration - api_password '%s'\r\n", "********");
+        SYS_CONSOLE_PRINT("App:  Found configuration - device_name '%s'\r\n", appData.device_name);
+        SYS_CONSOLE_PRINT("App:  Found configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
+        
+        SYS_CONSOLE_PRINT("App:  Found configuration - sensor profiles:\r\n");
+        SYS_CONSOLE_PRINT("\t- pressure_click_config(threshold_pct: %f, period_sec: %d)\r\n", 
+                appData.pressure_click_config.threshold_pct, appData.pressure_click_config.period_sec);
+        SYS_CONSOLE_PRINT("\t- temperature_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+                appData.temperature_click_config.threshold_pct, appData.temperature_click_config.period_sec);
+        SYS_CONSOLE_PRINT("\t- humidity_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+                appData.humidity_click_config.threshold_pct, appData.humidity_click_config.period_sec);
+        SYS_CONSOLE_PRINT("\t- motion_click_config(interval_sec: %d)\r\n",
+                appData.motion_click_config.period_sec);
+        SYS_CONSOLE_PRINT("\t- air_quality_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+                appData.air_quality_click_config.threshold_pct, appData.air_quality_click_config.period_sec);
+    }
+    else 
+    {
+        appData.host[0] = 0;
+        appData.project_mqtt_id[0] = 0;
+        
+        ret = false;
+    }
 
-	XMEMSET(appData.host, 0, sizeof(appData.host));
-	XMEMSET(appData.project_mqtt_id, 0, sizeof(appData.project_mqtt_id));
-	XMEMSET(appData.user_mqtt_id, 0, sizeof(appData.user_mqtt_id));
-	XMEMSET(appData.api_key, 0, sizeof(appData.api_key));
-	XMEMSET(appData.api_password, 0, sizeof(appData.api_password));
-	XMEMSET(appData.device_name, 0, sizeof(appData.device_name));
-	XMEMSET(&appData.app_sensor_type, 0, sizeof(appData.app_sensor_type));
-	XMEMSET(configurationSignature, 0, sizeof(configurationSignature));
-
-	XMEMSET(&appData.pressure_click_config, 0, sizeof(APP_SENSOR_CONFIG));
-	XMEMSET(&appData.temperature_click_config, 0, sizeof(APP_SENSOR_CONFIG));
-	XMEMSET(&appData.motion_click_config, 0, sizeof(APP_SENSOR_CONFIG));
-	XMEMSET(&appData.air_quality_click_config, 0, sizeof(APP_SENSOR_CONFIG));
-
-
-	_Bool ret = APP_NVM_Read(NVM_CONFIGURATION_SPACE, configuration, NVM_CONFIGURATION_SIZE);
-	memcpy(appData.host, configuration+NVM_HOST_ADDRESS_OFFSET, sizeof(appData.host)-1);
-	memcpy(appData.project_mqtt_id, configuration+NVM_PROJECT_MQTT_ID_OFFSET, sizeof(appData.project_mqtt_id)-1);
-	memcpy(appData.user_mqtt_id, configuration+NVM_USER_MQTT_ID_OFFSET, sizeof(appData.user_mqtt_id)-1);
-	memcpy(appData.api_key, configuration+NVM_API_KEY_OFFSET, sizeof(appData.api_key)-1);
-	memcpy(appData.api_password, configuration+NVM_API_PASSWORD_OFFSET, sizeof(appData.api_password)-1);
-	memcpy(appData.device_name, configuration+NVM_DEVICE_NAME_OFFSET, sizeof(appData.device_name)-1);
-	memcpy(&appData.app_sensor_type, configuration+NVM_SENSOR_TYPE_OFFSET, sizeof(appData.app_sensor_type));
-	memcpy(configurationSignature, configuration+NVM_CONFIGURATION_SIGNATURE_OFFSET, sizeof(configurationSignature)-1);
-
-	if (!strcmp(configurationSignature, APP_CONFIGURATION_SIGNATURE) &&
-		 appData.host[0] &&
-		 appData.project_mqtt_id[0] &&
-		 appData.user_mqtt_id[0] &&
-		 appData.api_key[0] &&
-		 appData.api_password[0] &&
-		 appData.device_name[0])
-	{
-		APP_UpdateMQTTLoginInfo();
-
-		SYS_CONSOLE_PRINT("App:  Found configuration - host '%s'\r\n", appData.host);
-		SYS_CONSOLE_PRINT("App:  Found configuration - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
-		SYS_CONSOLE_PRINT("App:  Found configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
-		SYS_CONSOLE_PRINT("App:  Found configuration - api_key '%s'\r\n", "********");
-		SYS_CONSOLE_PRINT("App:  Found configuration - api_password '%s'\r\n", "********");
-		SYS_CONSOLE_PRINT("App:  Found configuration - device_name '%s'\r\n", appData.device_name);
-		SYS_CONSOLE_PRINT("App:  Found configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
-	}
-	else
-	{
-		appData.host[0] = 0;
-		appData.project_mqtt_id[0] = 0;
-
-		ret = false;
-	}
-
-	return ret;
+    return ret;
 }
 
 void APP_SaveConfiguration ( void )
 {
-	strcpy(configurationSignature, APP_CONFIGURATION_SIGNATURE);
-	XMEMSET(configuration, 0, NVM_CONFIGURATION_SIZE);
-
-	memcpy(configuration+NVM_HOST_ADDRESS_OFFSET, appData.host, sizeof(appData.host)-1);
-	memcpy(configuration+NVM_PROJECT_MQTT_ID_OFFSET, appData.project_mqtt_id, sizeof(appData.project_mqtt_id)-1);
-	memcpy(configuration+NVM_USER_MQTT_ID_OFFSET, appData.user_mqtt_id, sizeof(appData.user_mqtt_id)-1);
-	memcpy(configuration+NVM_API_KEY_OFFSET, appData.api_key, sizeof(appData.api_key)-1);
-	memcpy(configuration+NVM_API_PASSWORD_OFFSET, appData.api_password, sizeof(appData.api_password)-1);
-	memcpy(configuration+NVM_DEVICE_NAME_OFFSET, appData.device_name, sizeof(appData.device_name)-1);
-	memcpy(configuration+NVM_SENSOR_TYPE_OFFSET, &appData.app_sensor_type, sizeof(appData.app_sensor_type));
-	memcpy(configuration+NVM_CONFIGURATION_SIGNATURE_OFFSET, configurationSignature, sizeof(appData.api_password)-1);
-
-	_Bool ret = APP_NVM_Write(NVM_CONFIGURATION_SPACE, configuration);
-	if (ret)
-	{
-		SYS_CONSOLE_MESSAGE("App:  Writing configuration to NVM - success\r\n");
-	}
-	else
-	{
-		SYS_CONSOLE_MESSAGE("App:  Writing configuration to NVM - failed\r\n");
-		while (1);
-	}
-
-	SYS_CONSOLE_PRINT("App:  Configured host - '%s'\r\n", appData.host);
-	SYS_CONSOLE_PRINT("App:  Configured host - project_mqtt_id '%s'\r\n", appData.project_mqtt_id);
-	SYS_CONSOLE_PRINT("App:  Configured host - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
-	SYS_CONSOLE_PRINT("App:  Configured host - api_key '%s'\r\n", "********");
-	SYS_CONSOLE_PRINT("App:  Configured host - api_password '%s'\r\n", "********");
-	//SYS_CONSOLE_PRINT("App:  Configured host - api_key '%s'\r\n", appData.api_key);
-	//SYS_CONSOLE_PRINT("App:  Configured host - api_password '%s'\r\n", appData.api_password);
-	SYS_CONSOLE_PRINT("App:  Configured host - device_name '%s'\r\n", appData.device_name);
-	SYS_CONSOLE_PRINT("App:  Configured host - sensor_type '%d'\r\n", appData.app_sensor_type);
-
-	APP_UpdateMQTTLoginInfo();
+    strcpy(configurationSignature, APP_CONFIGURATION_SIGNATURE);
+    XMEMSET(configuration, 0, NVM_CONFIGURATION_SIZE);
+    
+    memcpy(configuration+NVM_HOST_ADDRESS_OFFSET, appData.host, sizeof(appData.host)-1);
+    memcpy(configuration+NVM_PROJECT_MQTT_ID_OFFSET, appData.project_mqtt_id, sizeof(appData.project_mqtt_id)-1);
+    memcpy(configuration+NVM_USER_MQTT_ID_OFFSET, appData.user_mqtt_id, sizeof(appData.user_mqtt_id)-1);
+    memcpy(configuration+NVM_API_KEY_OFFSET, appData.api_key, sizeof(appData.api_key)-1);
+    memcpy(configuration+NVM_API_PASSWORD_OFFSET, appData.api_password, sizeof(appData.api_password)-1);
+    memcpy(configuration+NVM_DEVICE_NAME_OFFSET, appData.device_name, sizeof(appData.device_name)-1);
+    memcpy(configuration+NVM_SENSOR_TYPE_OFFSET, &appData.app_sensor_type, sizeof(appData.app_sensor_type));
+    memcpy(configuration+NVM_CONFIGURATION_SIGNATURE_OFFSET, configurationSignature, sizeof(appData.api_password)-1);
+    
+    _Bool ret = APP_NVM_Write(NVM_CONFIGURATION_SPACE, configuration);
+    if (ret)
+    {
+        SYS_CONSOLE_PRINT("App:  Writing configuration to NVM - success\r\n");
+    } else{
+        SYS_CONSOLE_PRINT("App:  Writing configuration to NVM - failed\r\n");
+        while(1);
+    }
+    
+    SYS_CONSOLE_PRINT("App:  Configured host - '%s'\r\n", appData.host);
+    SYS_CONSOLE_PRINT("App:  Configured project_mqtt_id - '%s'\r\n", appData.project_mqtt_id);
+    SYS_CONSOLE_PRINT("App:  Configured user_mqtt_id - '%s'\r\n", appData.user_mqtt_id);
+    SYS_CONSOLE_PRINT("App:  Configured api_key - '%s'\r\n", "********");
+    SYS_CONSOLE_PRINT("App:  Configured api_password - '%s'\r\n", "********");
+    //SYS_CONSOLE_PRINT("App:  Configured api_key - '%s'\r\n", appData.api_key);
+    //SYS_CONSOLE_PRINT("App:  Configured api_password - '%s'\r\n", appData.api_password);
+    SYS_CONSOLE_PRINT("App:  Configured device_name - '%s'\r\n", appData.device_name);
+    SYS_CONSOLE_PRINT("App:  Configured sensor_type - '%d'\r\n", appData.app_sensor_type);
+    
+    APP_UpdateMQTTLoginInfo();
+    
+    APP_Save_SensorConfiguration();
 }
 
 void APP_EraseConfiguration ( void )
 {
-	appData.host[0] = 0;
-	APP_NVM_Erase(NVM_CONFIGURATION_SPACE);
-	SYS_CONSOLE_MESSAGE("************************************\r\n"
-							  "App:  Erasing configuration!\r\n"
-							  "************************************\r\n");
+    appData.host[0] = 0;
+    APP_NVM_Erase(NVM_CONFIGURATION_SPACE);
+    SYS_CONSOLE_PRINT(  "************************************\r\n"
+                        "App:  Erasing configuration!\r\n"
+                        "************************************\r\n");
+}
+
+void APP_Save_SensorConfiguration ( void )
+{
+    XMEMSET(configuration, 0, NVM_SENSORS_CONFIGURATION_SIZE);
+    memcpy(configuration+NVM_SENSOR_CONFIG_PRESSURE_CLICK_OFFSET, &appData.pressure_click_config, sizeof(APP_SENSOR_CONFIG));
+    memcpy(configuration+NVM_SENSOR_CONFIG_TEMPERATURE_CLICK_OFFSET, &appData.temperature_click_config, sizeof(APP_SENSOR_CONFIG));
+    memcpy(configuration+NVM_SENSOR_CONFIG_HUMIDITY_CLICK_OFFSET, &appData.humidity_click_config, sizeof(APP_SENSOR_CONFIG));
+    memcpy(configuration+NVM_SENSOR_CONFIG_MOTION_CLICK_OFFSET, &appData.motion_click_config, sizeof(APP_SENSOR_CONFIG));
+    memcpy(configuration+NVM_SENSOR_CONFIG_AIR_QUALITY_OFFSET, &appData.air_quality_click_config, sizeof(APP_SENSOR_CONFIG));
+ 
+    _Bool ret = APP_NVM_Write(NVM_SENSORS_CONFIGURATION_SPACE, configuration);
+    if (ret)
+    {
+        SYS_CONSOLE_PRINT("App:  Writing sensors configuration to NVM - success\r\n");
+    } else{
+        SYS_CONSOLE_PRINT("App:  Writing sensors configuration to NVM - failed\r\n");
+        while(1);
+    }
+    
+    SYS_CONSOLE_PRINT("App:  Configured sensor profiles:\r\n");
+    SYS_CONSOLE_PRINT("\t- pressure_click_config(threshold_pct: %f, period_sec: %d)\r\n", 
+            appData.pressure_click_config.threshold_pct, appData.pressure_click_config.period_sec);
+    SYS_CONSOLE_PRINT("\t- temperature_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+            appData.temperature_click_config.threshold_pct, appData.temperature_click_config.period_sec);
+    SYS_CONSOLE_PRINT("\t- humidity_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+            appData.humidity_click_config.threshold_pct, appData.humidity_click_config.period_sec);
+    SYS_CONSOLE_PRINT("\t- motion_click_config(interval_sec: %d)\r\n",
+            appData.motion_click_config.period_sec);
+    SYS_CONSOLE_PRINT("\t- air_quality_click_config(threshold_pct: %f, period_sec: %d)\r\n",
+            appData.air_quality_click_config.threshold_pct, appData.air_quality_click_config.period_sec);
+}
+
+
+int APP_Send_IPDetectionCommand ( void )
+{
+    MqttPublish publish;
+    char publishPayload[512] = "{\"event_data\":{'detect_ip':true}, \"add_client_ip\": true}";
+    XMEMSET(&publish, 0, sizeof(MqttPublish));
+    publish.retain = 0;
+    publish.qos = 0;
+    publish.duplicate = 0;
+    publish.topic_name = appData.publish_topic_name;
+    publish.packet_id = mqttclient_get_packetid();
+    publish.buffer = publishPayload;
+    publish.total_len = strlen(publish.buffer);
+    int rc = MqttClient_Publish(&appData.myClient, &publish);
+    SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
+        publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
+    if(rc != MQTT_CODE_SUCCESS){
+        SYS_CONSOLE_PRINT("App:  MQTT.Publish: failed\r\n");   
+    }
+    
+    return rc;
+}
+
+int APP_Send_DeviceInfo ( void )
+{
+    MqttPublish publish;
+    char mac_address[20];
+    long mb_mem_used = 925; //TODO: Query used memory, currently hardcoded in KB with value reported from compiler
+    char connected_sensor[32] = "none";
+    char publishPayload[512];
+    char led1_status = (BSP_LEDStateGet(BSP_LED_1_CHANNEL, BSP_LED_1_PORT) == BSP_LED_STATE_ON);
+    char led2_status = (BSP_LEDStateGet(BSP_LED_2_CHANNEL, BSP_LED_2_PORT) == BSP_LED_STATE_ON);
+    char led3_status = (BSP_LEDStateGet(BSP_LED_3_CHANNEL, BSP_LED_3_PORT) == BSP_LED_STATE_ON);
+    char led4_status = (BSP_LEDStateGet(BSP_LED_4_CHANNEL, BSP_LED_4_PORT) == BSP_LED_STATE_ON);
+
+    if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK) {
+        strcpy(connected_sensor, "pressure_click");
+    }
+    else if (appData.app_sensor_type == APP_SENSOR_TYPE_AIR_QUALITY_CLICK) {
+        strcpy(connected_sensor, "air_quality_click");
+    }
+    else if (appData.app_sensor_type == APP_SENSOR_TYPE_HUMIDITY_CLICK) {
+        strcpy(connected_sensor, "humidity_click");
+    }
+    else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK) {
+        strcpy(connected_sensor, "motion_click");
+    }
+
+    sprintf(mac_address, "%02x:%02x:%02x:%02x:%02x:%02x",
+                appData.macAddress.v[0], appData.macAddress.v[1], appData.macAddress.v[2],
+                appData.macAddress.v[3], appData.macAddress.v[4], appData.macAddress.v[5]);
+
+    sprintf(publishPayload, "{\"event_data\": {\"mac\": \"%s\", \"lan_ip\": \"%s\", \"memory_usage\": %d, \"connected_sensor\": \"%s\", \"device_type\": \"IoT Ethernet\", \"device_name\": \"%s\", \"led_1\": \"%s\", \"led_2\": \"%s\", \"led_3\": \"%s\", \"led_4\": \"%s\"}}",
+            mac_address, appData.local_ip, mb_mem_used, connected_sensor, appData.device_name, 
+            (led1_status)?"on":"off", (led2_status)?"on":"off", (led3_status)?"on":"off", (led4_status)?"on":"off");
+
+    XMEMSET(&publish, 0, sizeof(MqttPublish));
+    publish.retain = 0;
+    publish.qos = 0;
+    publish.duplicate = 0;
+    publish.topic_name = appData.publish_topic_name;
+    publish.packet_id = mqttclient_get_packetid();
+    publish.buffer = publishPayload;
+    publish.total_len = strlen(publish.buffer);
+    int rc = MqttClient_Publish(&appData.myClient, &publish);
+    SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
+        publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
+    if(rc != MQTT_CODE_SUCCESS){
+        SYS_CONSOLE_PRINT("App:  MQTT.Publish: failed\r\n"); 
+    }
+    
+    return rc;
 }
 
 // *****************************************************************************
@@ -681,28 +838,37 @@ void APP_EraseConfiguration ( void )
 
 void APP_Initialize ( void )
 {
-	/* Place the App state machine in its initial state. */
-	appData.state = APP_STATE_INIT;
-	XMEMSET(appData.host, '\0', sizeof(appData.host));
-	appData.port = AWS_IOT_PORT;
-
-	// Initialize MQTT net callbacks
-	appData.myNet.connect = APP_tcpipConnect_cb;
-	appData.myNet.disconnect = APP_tcpipDisconnect_cb;
-	appData.myNet.read = APP_tcpipRead_cb;
-	appData.myNet.write = APP_tcpipWrite_cb;
-
-	// Init LED publish bools
-	appData.led1 = false;
-	appData.led2 = false;
-	appData.led3 = false;
-	appData.led4 = false;
-
-	appData.led1val = false;
-	appData.led2val = false;
-	appData.led3val = false;
-	appData.led4val = false;
-
+    /* Place the App state machine in its initial state. */
+    appData.state = APP_STATE_INIT;
+    XMEMSET(appData.host, '\0', sizeof(appData.host));
+    appData.port = AWS_IOT_PORT;
+    
+    // Initialize MQTT net callbacks
+    appData.myNet.connect = APP_tcpipConnect_cb;
+    appData.myNet.disconnect = APP_tcpipDisconnect_cb;
+    appData.myNet.read = APP_tcpipRead_cb;
+    appData.myNet.write = APP_tcpipWrite_cb;
+    
+    // Init LED publish bools
+    appData.led1 = false;
+    appData.led2 = false;
+    appData.led3 = false;
+    appData.led4 = false;
+    
+    appData.led1val = false;
+    appData.led2val = false;
+    appData.led3val = false;
+    appData.led4val = false;
+    
+    appData.pressure_click_config.threshold_pct = 0;
+    appData.pressure_click_config.period_sec = 0;
+    appData.air_quality_click_config.threshold_pct = 0;
+    appData.air_quality_click_config.period_sec = 0;
+    appData.humidity_click_config.threshold_pct = 0;
+    appData.humidity_click_config.period_sec = 0;
+    appData.temperature_click_config.threshold_pct = 0;
+    appData.temperature_click_config.period_sec = 0;
+    appData.motion_click_config.period_sec = 0;
 }
 
 
@@ -973,6 +1139,7 @@ void APP_Tasks ( void )
 										1 : 0, connect.keep_alive_sec);
 				APP_TIMER_Set(&appData.mqttKeepAlive);
 				APP_TIMER_Set(&appData.mqttSendSensorsData);
+				APP_TIMER_Set(&appData.mqttSendDeviceInfo);
 				appData.state = APP_TCPIP_MQTT_SUBSCRIBE;
 				break;
 			}
@@ -1016,83 +1183,20 @@ void APP_Tasks ( void )
 				BSP_LEDOff(BSP_LED_3_CHANNEL, BSP_LED_3_PORT); 
 				BSP_LEDOff(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
 
-				/* Publish Topic */
-				{// send IP detection command
-					MqttPublish publish;
-					char publishPayload[512] = "{\"event_data\":{'detect_ip':true}, \"add_client_ip\": true}";
-					XMEMSET(&publish, 0, sizeof(MqttPublish));
-					publish.retain = 0;
-					publish.qos = 0;
-					publish.duplicate = 0;
-					publish.topic_name = appData.publish_topic_name;
-					publish.packet_id = mqttclient_get_packetid();
-					publish.buffer = publishPayload;
-					publish.total_len = strlen(publish.buffer);
-					rc = MqttClient_Publish(&appData.myClient, &publish);
-					SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
-											publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
-					if (rc != MQTT_CODE_SUCCESS)
-					{
-						SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed\r\n");   
-						appData.state = APP_TCPIP_ERROR;
-						break;
-					}
-				}
+				if (APP_Send_IPDetectionCommand() != MQTT_CODE_SUCCESS)
+            			{
+                			appData.state = APP_TCPIP_ERROR;
+                			break;
+            			}
+            
+            			if (APP_Send_DeviceInfo() != MQTT_CODE_SUCCESS)
+            			{
+                			appData.state = APP_TCPIP_ERROR;
+                			break;
+            			}
+				
 
-				{ // send device info
-					MqttPublish publish;
-					char mac_address[20];
-					long mb_mem_used = 925;	//TODO: Query used memory, currently hardcoded in KB with value reported from compiler
-					char connected_sensor[32] = "none";
-					char publishPayload[512];
-					char led1_status = (BSP_LEDStateGet(BSP_LED_1_CHANNEL, BSP_LED_1_PORT) == BSP_LED_STATE_ON);
-					char led2_status = (BSP_LEDStateGet(BSP_LED_2_CHANNEL, BSP_LED_2_PORT) == BSP_LED_STATE_ON);
-					char led3_status = (BSP_LEDStateGet(BSP_LED_3_CHANNEL, BSP_LED_3_PORT) == BSP_LED_STATE_ON);
-					char led4_status = (BSP_LEDStateGet(BSP_LED_4_CHANNEL, BSP_LED_4_PORT) == BSP_LED_STATE_ON);
-
-					if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK)
-					{
-						strcpy(connected_sensor, "pressure_click");
-					}
-					else if (appData.app_sensor_type == APP_SENSOR_TYPE_AIR_QUALITY_CLICK)
-					{
-						strcpy(connected_sensor, "air_quality_click");
-					}
-					else if (appData.app_sensor_type == APP_SENSOR_TYPE_HUMIDITY_CLICK)
-					{
-						strcpy(connected_sensor, "humidity_click");
-					}
-					else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK)
-					{
-						strcpy(connected_sensor, "motion_click");
-					}
-
-					sprintf(mac_address, "%02x:%02x:%02x:%02x:%02x:%02x",
-							  appData.macAddress.v[0], appData.macAddress.v[1], appData.macAddress.v[2],
-							  appData.macAddress.v[3], appData.macAddress.v[4], appData.macAddress.v[5]);
-
-					sprintf(publishPayload, "{\"event_data\": {\"mac\": \"%s\", \"lan_ip\": \"%s\", \"memory_usage\": %d, \"connected_sensor\": \"%s\", \"device_type\": \"IoT Ethernet\", \"device_name\": \"%s\", \"led_1\": \"%s\", \"led_2\": \"%s\", \"led_3\": \"%s\", \"led_4\": \"%s\"}}",
-							  mac_address, appData.local_ip, mb_mem_used, connected_sensor, appData.device_name, 
-							  (led1_status)?"on":"off", (led2_status)?"on":"off", (led3_status)?"on":"off", (led4_status)?"on":"off");
-
-					XMEMSET(&publish, 0, sizeof(MqttPublish));
-					publish.retain = 0;
-					publish.qos = 0;
-					publish.duplicate = 0;
-					publish.topic_name = appData.publish_topic_name;
-					publish.packet_id = mqttclient_get_packetid();
-					publish.buffer = publishPayload;
-					publish.total_len = strlen(publish.buffer);
-					rc = MqttClient_Publish(&appData.myClient, &publish);
-					SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
-											publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
-					if (rc != MQTT_CODE_SUCCESS)
-					{
-						SYS_CONSOLE_MESSAGE("App:  MQTT.Publish: failed\r\n");   
-						appData.state = APP_TCPIP_ERROR;
-						break;
-					}
-				}
+				
 
 				appData.state = APP_TCPIP_MQTT_LOOP;
 				break;
@@ -1443,6 +1547,22 @@ void APP_Tasks ( void )
 						Button4Changed=false;
 					}
 				}
+
+
+				// Send device information every 10 minutes
+            			if(APP_TIMER_Expired(&appData.mqttSendDeviceInfo, SEND_DEVICE_INFO)){
+                			// Reset send sensors data timer
+                			APP_TIMER_Set(&appData.mqttSendDeviceInfo);
+                
+                			if (APP_Send_DeviceInfo() != MQTT_CODE_SUCCESS)
+                			{
+                    				appData.state = APP_TCPIP_ERROR;
+                    				break;
+                			}
+                
+                			// Reset keep alive timer since we sent a publish
+                			APP_TIMER_Set(&appData.mqttKeepAlive);
+            			}
 
 
 				if (APP_TIMER_Expired(&appData.mqttKeepAlive, KEEP_ALIVE))
