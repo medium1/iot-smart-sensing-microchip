@@ -1136,7 +1136,7 @@ void APP_Tasks ( void )
 						MotionChanged=false;
 						APP_TIMER_Set(&appData.motionTimer);
 					}
-					else if (appData.app_sensor_type == APP_SENSOR_TYPE_AIR_QUALITY_CLICK && APP_TIMER_Expired(&appData.tenminutesTimer, TENMINUTES_DURATION))
+					else if (APP_TIMER_Expired(&appData.tenminutesTimer, TENMINUTES_DURATION))
 					{ // Send sensors data
 						MqttPublish publish;
 						char mac_address[20];
@@ -1513,25 +1513,6 @@ void APP_Tasks ( void )
 						char *serialized_string = NULL;
 						char reportedPayload[1024];
 						char bHavePayload = 0;
-						if (switchPublish)
-						{
-							if (test.switchNum == BSP_SWITCH_MINT)
-							{
-								if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK)
-								{
-									json_object_dotset_boolean(rootObj, "event_data.motion_detected", test.switchVal);
-									json_object_dotset_string(rootObj, "event_data.connected_sensor", "motion_click");
-									bHavePayload = 1;
-								}
-							}
-							else if (test.switchVal==BSP_SWITCH_STATE_ASSERTED)
-							{
-								//json_object_dotset_string(rootObj, APP_Switch_Publish_Helper(test.switchNum), (test.switchVal ? "up" : "down"));         
-								json_object_dotset_number(rootObj, "event_data.button_press", test.switchNum);
-								bHavePayload = 1;
-							}
-						}
-
 						if (potPublish)
 						{
 							json_object_dotset_number(rootObj, "event_data.pot", potVal);
