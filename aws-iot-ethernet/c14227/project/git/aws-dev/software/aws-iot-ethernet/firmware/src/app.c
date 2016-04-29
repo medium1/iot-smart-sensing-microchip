@@ -1273,10 +1273,12 @@ void APP_Tasks ( void )
                 
                 
                 // Air_Quality_Click
+                double air_quality_changed_percent = ABS(app1Data.airValue-appData.last_air_quality_value)/appData.last_air_quality_value;
 				nWaittingTime = (appData.air_quality_click_config.period_sec>0)?
                         appData.air_quality_click_config.period_sec:DEFAULT_AIR_QUALITY_CLICK_INTERVAL;
                 if (appData.app_sensor_type == APP_SENSOR_TYPE_AIR_QUALITY_CLICK && 
-                    APP_TIMER_Expired(&appData.mqttSendAirQualityClick, nWaittingTime))
+                    ( APP_TIMER_Expired(&appData.mqttSendAirQualityClick, nWaittingTime) ||
+                      (air_quality_changed_percent >= appData.air_quality_click_config.threshold_pct) ))
                 {
                     sprintf(publishPayload, "{\"event_data\": {\"air_quality\":%f, \"connected_sensor\":\"air_quality_click\"}}",
                             (double)app1Data.airValue);
