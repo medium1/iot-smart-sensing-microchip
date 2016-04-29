@@ -68,6 +68,8 @@ extern "C" {
 #endif
 // DOM-IGNORE-END 
 
+#define ABS(a) (((a)>0)?(a):-(a))
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Type Definitions
@@ -237,8 +239,11 @@ typedef struct
 		uint32_t motionTimer;
 		uint32_t timerTCPIP;
 		uint32_t mqttKeepAlive;
-		uint32_t mqttSendSensorsData;
 		uint32_t mqttSendDeviceInfo;
+		uint32_t mqttSendPressureClick;
+    	uint32_t mqttSendHumidityClick;
+    	uint32_t mqttSendAirQualityClick;
+    	uint32_t mqttSendMotionClick;
 
 		// Mqtt Client
 		MqttNet myNet;
@@ -258,12 +263,18 @@ typedef struct
 		bool led3val;
 		bool led4val;
 
-    //Sensors configuration
-    APP_SENSOR_CONFIG pressure_click_config;
-    APP_SENSOR_CONFIG temperature_click_config;
-    APP_SENSOR_CONFIG humidity_click_config;
-    APP_SENSOR_CONFIG motion_click_config;
-    APP_SENSOR_CONFIG air_quality_click_config;
+        //Sensors configuration
+        APP_SENSOR_CONFIG pressure_click_config;
+        APP_SENSOR_CONFIG temperature_click_config;
+        APP_SENSOR_CONFIG humidity_click_config;
+        APP_SENSOR_CONFIG motion_click_config;
+        APP_SENSOR_CONFIG air_quality_click_config;
+
+        //Sensors values
+        double last_pressure_value;
+        double last_temperature_value;
+        double last_humidity_value;
+        double last_air_quality_value;
 	} APP_DATA;
 
 
