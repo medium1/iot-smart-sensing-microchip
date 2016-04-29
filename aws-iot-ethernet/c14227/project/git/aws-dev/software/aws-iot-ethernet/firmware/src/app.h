@@ -75,8 +75,8 @@ extern "C" {
 // Section: Type Definitions
 // *****************************************************************************
 // *****************************************************************************
-//#define AWS_IOT_PORT 8883 // M1 Comment
-#define AWS_IOT_PORT 61620
+//#define MediumOne_IOT_PORT 8883 // M1 Comment
+#define MediumOne_IOT_PORT 61620
 
 //#define NVM_CLIENT_CERTIFICATE_SPACE    (32 * 1024)
 //#define NVM_CLIENT_KEY_SPACE            (16 * 1024)
@@ -202,7 +202,7 @@ typedef struct
 		void* ctx;
 		void* ssl;
 
-		// The AWS endpoint to access the AWS IoT Service
+		// The MediumOne endpoint to access the MediumOne IoT Service
 		unsigned char host[256];
 		unsigned char project_mqtt_id[256];
 		unsigned char user_mqtt_id[256];
@@ -216,7 +216,7 @@ typedef struct
 		unsigned char publish_topic_name[256];
 		unsigned char subscribe_topic_name[256];
 
-		// The AWS endpoint IP address location
+		// The MediumOne endpoint IP address location
 		IP_MULTI_ADDRESS  host_ipv4;
 
 		TCPIP_MAC_ADDR          macAddress;

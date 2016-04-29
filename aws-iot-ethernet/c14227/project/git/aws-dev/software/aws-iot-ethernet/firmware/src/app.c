@@ -484,7 +484,7 @@ int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, by
 	appData.lightShowVal = BSP_LED_RX;
 	xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
 
-	// If the topic matches our AWS IoT delta topic
+	// If the topic matches our MediumOne IoT delta topic
 	//if (!strncmp(topic_mqtt_event, msg->topic_name, msg->topic_name_len))
 	{
 		JSON_Value *root_value = json_parse_string(payload);
@@ -847,7 +847,7 @@ void APP_Initialize ( void )
     /* Place the App state machine in its initial state. */
     appData.state = APP_STATE_INIT;
     XMEMSET(appData.host, '\0', sizeof(appData.host));
-    appData.port = AWS_IOT_PORT;
+    appData.port = MediumOne_IOT_PORT;
     
     // Initialize MQTT net callbacks
     appData.myNet.connect = APP_tcpipConnect_cb;
@@ -1090,7 +1090,7 @@ void APP_Tasks ( void )
 		case APP_TCPIP_MQTT_NET_CONNECT:
 			{
 				SYS_CONSOLE_MESSAGE("App:  MQTT.Net_Connect\r\n");
-				int rc = MqttClient_NetConnect(&appData.myClient, (const char *)&appData.host, AWS_IOT_PORT, MQTT_DEFAULT_CMD_TIMEOUT_MS, NULL, NULL);
+				int rc = MqttClient_NetConnect(&appData.myClient, (const char *)&appData.host, MediumOne_IOT_PORT, MQTT_DEFAULT_CMD_TIMEOUT_MS, NULL, NULL);
 				SYS_CONSOLE_PRINT("App:  MQTT.Net_Connect: %s (%d)\r\n", MqttClient_ReturnCodeToString(rc), rc);
 				if (rc != MQTT_CODE_SUCCESS)
 				{
