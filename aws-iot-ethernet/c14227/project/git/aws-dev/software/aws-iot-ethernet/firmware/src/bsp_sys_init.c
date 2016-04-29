@@ -8,11 +8,11 @@
 	 bsp_sys_init.c
 
   Summary:      
-	 Board Support Package Implementation for IoT Wi-Fi n AWS IoT board.
+	 Board Support Package Implementation for IoT Wi-Fi n MediumOne IoT board.
 
   Description:
 	 This file contains the implementation of the Board Support Package for the
-	 IoT Wi-Fi n AWS IoT board to help interface with the board.
+	 IoT Wi-Fi n MediumOne IoT board to help interface with the board.
 *******************************************************************************/
 
 // DOM-IGNORE-BEGIN

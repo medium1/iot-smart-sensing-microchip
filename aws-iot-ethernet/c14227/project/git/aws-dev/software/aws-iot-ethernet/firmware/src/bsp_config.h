@@ -8,11 +8,11 @@
     bsp_config.h
 
   Summary:      
-    Board Support Package Header file for IoT Wi-Fi n AWS IoT St.
+    Board Support Package Header file for IoT Wi-Fi n MediumOne IoT St.
 
   Description:
     This file contains constants, macros, type defintions and function
-    declarations required by the IoT Wi-Fi G AWS IoT Starter Kit
+    declarations required by the IoT Wi-Fi G MediumOne IoT Starter Kit
  
 *******************************************************************************/
 
