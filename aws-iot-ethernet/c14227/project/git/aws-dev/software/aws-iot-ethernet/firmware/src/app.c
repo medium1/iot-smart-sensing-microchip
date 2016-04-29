@@ -91,6 +91,7 @@ char topic_mqtt_event[256];
 #define MAX_BUFFER_SIZE 1024
 #define MAX_PACKET_ID 65536
 #define KEEP_ALIVE 900
+#define DEFAULT_MOTION_CLICK_INTERVAL 60
 #define SEND_SENSORS_DATA 60
 #define SEND_DEVICE_INFO 600
 
@@ -476,6 +477,12 @@ bool APP_TIMER_Set(uint32_t * timer)
     return true;
 }
 
+bool APP_TIMER_Set2(uint32_t * timer, int32_t delta_seconds)
+{
+    *timer = SYS_TMR_TickCountGet() + (delta_seconds * 1000);
+    return true;
+}
+
 const char* APP_ReturnCodeToString(int return_code)
 {
     switch(return_code) {
@@ -676,11 +683,9 @@ void APP_Save_SensorConfiguration ( void )
             appData.air_quality_click_config.threshold_pct, appData.air_quality_click_config.period_sec);
 }
 
-
-int APP_Send_IPDetectionCommand ( void )
+int APP_Send_MQTTMessage (char* publishPayload)
 {
     MqttPublish publish;
-    char publishPayload[512] = "{\"event_data\":{'detect_ip':true}, \"add_client_ip\": true}";
     XMEMSET(&publish, 0, sizeof(MqttPublish));
     publish.retain = 0;
     publish.qos = 0;
@@ -696,16 +701,24 @@ int APP_Send_IPDetectionCommand ( void )
         SYS_CONSOLE_PRINT("App:  MQTT.Publish: failed\r\n");   
     }
     
+    // Reset keep alive timer since we sent a publish
+    APP_TIMER_Set(&appData.mqttKeepAlive);
+    
     return rc;
+}
+
+int APP_Send_IPDetectionCommand ( void )
+{
+    char publishPayload[512] = "{\"event_data\":{'detect_ip':true}, \"add_client_ip\": true}";
+    return APP_Send_MQTTMessage(publishPayload);
 }
 
 int APP_Send_DeviceInfo ( void )
 {
-    MqttPublish publish;
+    char publishPayload[512];
     char mac_address[20];
     long mb_mem_used = 925; //TODO: Query used memory, currently hardcoded in KB with value reported from compiler
     char connected_sensor[32] = "none";
-    char publishPayload[512];
     char led1_status = (BSP_LEDStateGet(BSP_LED_1_CHANNEL, BSP_LED_1_PORT) == BSP_LED_STATE_ON);
     char led2_status = (BSP_LEDStateGet(BSP_LED_2_CHANNEL, BSP_LED_2_PORT) == BSP_LED_STATE_ON);
     char led3_status = (BSP_LEDStateGet(BSP_LED_3_CHANNEL, BSP_LED_3_PORT) == BSP_LED_STATE_ON);
@@ -732,22 +745,7 @@ int APP_Send_DeviceInfo ( void )
             mac_address, appData.local_ip, mb_mem_used, connected_sensor, appData.device_name, 
             (led1_status)?"on":"off", (led2_status)?"on":"off", (led3_status)?"on":"off", (led4_status)?"on":"off");
 
-    XMEMSET(&publish, 0, sizeof(MqttPublish));
-    publish.retain = 0;
-    publish.qos = 0;
-    publish.duplicate = 0;
-    publish.topic_name = appData.publish_topic_name;
-    publish.packet_id = mqttclient_get_packetid();
-    publish.buffer = publishPayload;
-    publish.total_len = strlen(publish.buffer);
-    int rc = MqttClient_Publish(&appData.myClient, &publish);
-    SYS_CONSOLE_PRINT("App:  MQTT.Publish: Topic %s, %s (%d)\r\n    Payload: %s\r\n",
-        publish.topic_name, MqttClient_ReturnCodeToString(rc), rc, publish.buffer);
-    if(rc != MQTT_CODE_SUCCESS){
-        SYS_CONSOLE_PRINT("App:  MQTT.Publish: failed\r\n"); 
-    }
-    
-    return rc;
+    return APP_Send_MQTTMessage(publishPayload);
 }
 
 // *****************************************************************************
@@ -1052,7 +1050,11 @@ void APP_Tasks ( void )
                 1 : 0, connect.keep_alive_sec);
             APP_TIMER_Set(&appData.mqttKeepAlive);
             APP_TIMER_Set(&appData.mqttSendSensorsData);
-            APP_TIMER_Set(&appData.mqttSendDeviceInfo);
+            APP_TIMER_Set2(&appData.mqttSendDeviceInfo, -SEND_DEVICE_INFO);
+            APP_TIMER_Set(&appData.mqttSendPressureClick);
+            APP_TIMER_Set(&appData.mqttSendHumidityClick);
+            APP_TIMER_Set(&appData.mqttSendAirQualityClick);
+            APP_TIMER_Set2(&appData.mqttSendMotionClick, -DEFAULT_MOTION_CLICK_INTERVAL);
             appData.state = APP_TCPIP_MQTT_SUBSCRIBE;
             break;
         }
@@ -1115,8 +1117,33 @@ void APP_Tasks ( void )
             int rc;
             char publishPayload[512]="";
             
+            int nWaittingTime = (appData.motion_click_config.period_sec>0)?
+                        appData.motion_click_config.period_sec:DEFAULT_MOTION_CLICK_INTERVAL;
+            if (APP_TIMER_Expired(&appData.mqttSendMotionClick, nWaittingTime))
+            {
+                if (bspData.previousStateMInt) 
+                {
+                    sprintf(publishPayload, "{\"event_data\": {\"motion_detected\":true, \"connected_sensor\":\"motion_click\"}}");
+                    if (APP_Send_MQTTMessage(publishPayload) != MQTT_CODE_SUCCESS)
+                    {
+                        appData.state = APP_TCPIP_ERROR;
+                        break;
+                    }
+                    
+                    // Reset send motion_click timer
+                    APP_TIMER_Set(&appData.mqttSendMotionClick);
+                }
+                else
+                {
+                    // Reset send motion_click timer with keep expired
+                    APP_TIMER_Set2(&appData.mqttSendMotionClick, -nWaittingTime);
+                }
+            }
+                
             // Send sensors data every minute
-            if(APP_TIMER_Expired(&appData.mqttSendSensorsData, SEND_SENSORS_DATA)){
+            if(APP_TIMER_Expired(&appData.mqttSendSensorsData, SEND_SENSORS_DATA))
+            {
+                publishPayload[0] = 0;
                 // Reset send sensors data timer
                 APP_TIMER_Set(&appData.mqttSendSensorsData);
                 
@@ -1128,11 +1155,6 @@ void APP_Tasks ( void )
                 }
                 else if (appData.app_sensor_type == APP_SENSOR_TYPE_HUMIDITY_CLICK) {
                     
-                }
-                else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK)
-                { 
-                    char motion_detected = bspData.previousStateMInt;
-                    sprintf(publishPayload, "{\"event_data\": {\"motion_detected\":%s, \"connected_sensor\":\"motion_click\"}}", (motion_detected)?"true":"false");
                 }
                 
                 if (publishPayload[0])

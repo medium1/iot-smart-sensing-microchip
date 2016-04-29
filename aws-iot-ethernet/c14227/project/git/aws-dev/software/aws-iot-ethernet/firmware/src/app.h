@@ -232,6 +232,10 @@ typedef struct
     uint32_t mqttKeepAlive;
     uint32_t mqttSendSensorsData;
     uint32_t mqttSendDeviceInfo;
+    uint32_t mqttSendPressureClick;
+    uint32_t mqttSendHumidityClick;
+    uint32_t mqttSendAirQualityClick;
+    uint32_t mqttSendMotionClick;
     
     // Mqtt Client
     MqttNet myNet;
