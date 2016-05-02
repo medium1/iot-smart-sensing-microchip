@@ -65,6 +65,7 @@ char out_temp[14], out_pres[14];			  // Declaration of variable
 short address, buffer;								// Declaration of variables
 int tempor ;											// Declaration of variable
 
+#define TEMP_OFFSET 11000
 
 /* Declaration of function, which will initiate I2C communication on relation Miccrocontroler - Pressure Click
   and write one byte through I2C, onto memory address on the Pressure Click */
@@ -136,6 +137,7 @@ long int Pressure_Read_value(void)
 	Out_pressure = (Out_pressure << 8);
 	Out_pressure = (Out_pressure | low_byte);
 
+	Out_pressure >>= 12;
 	return Out_pressure;
 }
 
@@ -149,7 +151,7 @@ long int Temperature_Read_value(void)
 	low_byte = Pressure_Read(_TEMP_OUT_L);
 
 	Out_temperature = (Out_temperature << 8);
-	Out_temperature = (Out_temperature | low_byte);
+	Out_temperature = (Out_temperature | low_byte) + TEMP_OFFSET;
 
 	return Out_temperature;
 }
@@ -161,10 +163,10 @@ void pressure_temp_read(void)
 	{
 		retrycnt--;
 	}
-	if(retrycnt > 0)
+	if (retrycnt > 0)
 	{
-		temperature_value = Temperature_Read_value()/1000;
-		pressure_value = Pressure_Read_value()/10000;
+		temperature_value = ((float)Temperature_Read_value()/1000-32.0)*5/9;
+		pressure_value = Pressure_Read_value();
 	}
 	else
 	{
