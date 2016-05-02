@@ -821,7 +821,7 @@ int APP_Send_DeviceInfo ( void )
                 appData.macAddress.v[0], appData.macAddress.v[1], appData.macAddress.v[2],
                 appData.macAddress.v[3], appData.macAddress.v[4], appData.macAddress.v[5]);
 
-    sprintf(publishPayload, "{\"event_data\": {\"mac\": \"%s\", \"lan_ip\": \"%s\", \"memory_usage\": %d, \"connected_sensor\": \"%s\", \"device_type\": \"IoT Ethernet\", \"device_name\": \"%s\", \"led_1\": \"%s\", \"led_2\": \"%s\", \"led_3\": \"%s\", \"led_4\": \"%s\"}}",
+    sprintf(publishPayload, "{\"event_data\": {\"mac\": \"%s\", \"lan_ip\": \"%s\", \"memory_usage\": %d, \"connected_sensor\": \"%s\", \"device_type\": \"Ethernet\", \"device_name\": \"%s\", \"led_1\": \"%s\", \"led_2\": \"%s\", \"led_3\": \"%s\", \"led_4\": \"%s\"}}",
             mac_address, appData.local_ip, mb_mem_used, connected_sensor, appData.device_name, 
             (led1_status)?"on":"off", (led2_status)?"on":"off", (led3_status)?"on":"off", (led4_status)?"on":"off");
 
@@ -1048,11 +1048,17 @@ void APP_Tasks ( void )
 				}
 				else
 				{
-					if (validConfig == 0)
+					/*
+                    if (validConfig == 0)
 					{
 						SYS_CONSOLE_MESSAGE("App:  Received configuration from webpage, writing to NVM...\r\n");
 						APP_SaveConfiguration();
+                        
+                        // Restart board
+                        //SYS_RESET_SoftwareReset();
+                        break;
 					}
+                    */ 
 
 					appData.lightShowVal = BSP_LED_ALL_GOOD;
 					xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);  
@@ -1171,6 +1177,13 @@ void APP_Tasks ( void )
 				subscribe.topic_count = sizeof(topics)/sizeof(MqttTopic);
 				subscribe.topics = topics;
 				rc = MqttClient_Subscribe(&appData.myClient, &subscribe);
+                for (i = 0; i < subscribe.topic_count; i++)
+				{
+					topic = &subscribe.topics[i];
+					SYS_CONSOLE_PRINT("App:  MQTT.Topic List: %s, Qos %u, Return Code %u\r\n",
+											topic->topic_filter, topic->qos, topic->return_code);
+				}
+                
 				SYS_CONSOLE_PRINT("App:  MQTT.Subscribe: %s (%d)\r\n",
 										MqttClient_ReturnCodeToString(rc), rc);
 				if (rc != MQTT_CODE_SUCCESS)
@@ -1181,12 +1194,7 @@ void APP_Tasks ( void )
 					appData.state = APP_TCPIP_ERROR;
 					break;
 				}
-				for (i = 0; i < subscribe.topic_count; i++)
-				{
-					topic = &subscribe.topics[i];
-					SYS_CONSOLE_PRINT("App:  MQTT.Topic List: %s, Qos %u, Return Code %u\r\n",
-											topic->topic_filter, topic->qos, topic->return_code);
-				}  
+				  
 
 				BSP_LEDOff(BSP_LED_1_CHANNEL, BSP_LED_1_PORT); 
 				BSP_LEDOff(BSP_LED_2_CHANNEL, BSP_LED_2_PORT); 

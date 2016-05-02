@@ -55,6 +55,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
     Definitions
   ***************************************************************************/
 extern APP_DATA appData;
+extern void APP_SaveConfiguration ( void );
 
 /****************************************************************************
   Section:
@@ -86,12 +87,12 @@ static bool lastFailure = false;
   ***************************************************************************/
 HTTP_IO_RESULT TCPIP_HTTP_GetExecute(HTTP_CONN_HANDLE connHandle)
 {
-    uint8_t filename[20];
+    uint8_t filename[32];
     uint8_t* httpDataBuff;
 
     // Load the file name
     // Make sure uint8_t filename[] above is large enough for your longest name
-    SYS_FS_FileNameGet(TCPIP_HTTP_CurrentConnectionFileGet(connHandle), filename, 20);
+    SYS_FS_FileNameGet(TCPIP_HTTP_CurrentConnectionFileGet(connHandle), filename, sizeof(filename));
 
     httpDataBuff = TCPIP_HTTP_CurrentConnectionDataBufferGet(connHandle);
 
@@ -120,7 +121,7 @@ HTTP_IO_RESULT TCPIP_HTTP_GetExecute(HTTP_CONN_HANDLE connHandle)
 HTTP_IO_RESULT TCPIP_HTTP_PostExecute(HTTP_CONN_HANDLE connHandle)
 {
     // Resolve which function to use and pass along
-    uint8_t filename[20];
+    uint8_t filename[32];
 
     // Load the file name
     // Make sure uint8_t filename[] above is large enough for your longest name
@@ -199,7 +200,7 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     // Use current config in non-volatile memory as defaults
     httpDataBuff = TCPIP_HTTP_CurrentConnectionDataBufferGet(connHandle);
 
-    int nMAX_FIELD_NAME_LEN = 20;
+    int nMAX_FIELD_NAME_LEN = 32;
     
     // Read all browser POST data
     while(TCPIP_HTTP_CurrentConnectionByteCountGet(connHandle))
@@ -315,6 +316,9 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         strcpy(appData.device_name, device_name);
         appData.app_sensor_type = app_sensor_type;
 
+        SYS_CONSOLE_MESSAGE("App:  Received configuration from webpage, writing to NVM...\r\n");
+		APP_SaveConfiguration();
+                        
         //TODO: Check is it safe if we force change state like this to support configure modify on fly
         appData.state = APP_TCPIP_WAIT_CONFIGURATION;
     }
@@ -327,12 +331,13 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         // All parsing complete!  Save new settings and force an interface restart
         // Set the interface to restart and display reconnecting information
         strcpy((char*)httpDataBuff, "reconnect.htm?");
-        httpDataBuff[20+16] = 0x00; // Force null termination
+        /*httpDataBuff[20+16] = 0x00; // Force null termination
         for(i = 20; i < 20u+16u; i++)
         {
             if(httpDataBuff[i] == ' ')
                 httpDataBuff[i] = 0x00;
         }
+        */ 
     }
     else
     {   // Configuration error
