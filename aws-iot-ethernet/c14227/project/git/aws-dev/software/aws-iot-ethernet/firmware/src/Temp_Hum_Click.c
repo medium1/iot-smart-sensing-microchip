@@ -74,6 +74,8 @@ uint8_t HTODR = ODR_1Hz;		// set HTS221 humidity and temperature sample rate
 // Calibration data for HTS221 humidity and temperature
 uint8_t H0_rH_x2, H1_rH_x2, T0_degC_x8, T1_degC_x8, T0_msb, T1_msb;
 int16_t H0_T0_OUT, H1_T0_OUT, T0_OUT, T1_OUT;
+#define TEMP_OFFSET 7
+#define HUMID_OFFSET 30
 
 bool HTS221init(void)
 {
@@ -105,7 +107,7 @@ void humidity_temperature_read(void)
 	if (ReadI2C0(HTS221_STATUS_REG) & 0x02)
 	{
 		humidityCount = readHumidityData();
-		HTS221_humidity = (((float)humidityCount - (float)H0_T0_OUT)/((float)H1_T0_OUT - (float)H0_T0_OUT))*((float)H1_rH_x2 - (float)H0_rH_x2)/2. + (float) H0_rH_x2/2.;
+		HTS221_humidity = ((((float)humidityCount - (float)H0_T0_OUT)/((float)H1_T0_OUT - (float)H0_T0_OUT))*((float)H1_rH_x2 - (float)H0_rH_x2)/2. + (float) H0_rH_x2/2.)+HUMID_OFFSET;
 	}
 
 	if (ReadI2C0(HTS221_STATUS_REG) & 0x01)
@@ -113,7 +115,7 @@ void humidity_temperature_read(void)
 		temperatureCount = readTempData();
 		uint16_t outT0 = ((uint16_t) T0_msb << 8) | T0_degC_x8;
 		uint16_t outT1 = ((uint16_t) T1_msb << 8) | T1_degC_x8;
-		HTS221_temperature = (((float)temperatureCount - (float)T0_OUT)/((float)T1_OUT - (float)T0_OUT))*((float)outT1 - (float)outT0)/8. + (float) outT0/8.;
+		HTS221_temperature = ((((float)temperatureCount - (float)T0_OUT)/((float)T1_OUT - (float)T0_OUT))*((float)outT1 - (float)outT0)/8. + (float) outT0/8.)-TEMP_OFFSET;
 	}
 }
 

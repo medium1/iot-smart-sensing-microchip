@@ -375,7 +375,7 @@ typedef struct
 
 	int I2C1_val1,I2C1_val2;
 	long int pressure_value;										// Declaration of pressure variable in mbar
-	int temperature_value;										// Declaration of temperature variable
+	float temperature_value;										// Declaration of temperature variable
 	unsigned char chip_id_address;
 	float Temperature;
 	float Humidity;
