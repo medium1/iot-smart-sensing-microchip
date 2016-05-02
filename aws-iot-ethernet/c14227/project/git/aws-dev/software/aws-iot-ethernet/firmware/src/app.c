@@ -1224,7 +1224,7 @@ void APP_Tasks ( void )
                 
                 // Pressure_Click
                 double pressure_changed_percent = ABS(pressure_value-appData.last_pressure_value)/appData.last_pressure_value;
-                double temperature_changed_percent = ABS(HTS221_temperature-appData.last_temperature_value)/appData.last_temperature_value;
+				double temperature_changed_percent = ABS(temperature_value-appData.last_temperature_value)/appData.last_temperature_value;
 				int nWaittingTime = (appData.pressure_click_config.period_sec>0)?
                         appData.pressure_click_config.period_sec:DEFAULT_PRESSURE_CLICK_INTERVAL;
                 int nTempWaittingTime = (appData.temperature_click_config.period_sec>0)?
@@ -1236,7 +1236,7 @@ void APP_Tasks ( void )
                       (temperature_changed_percent >= appData.temperature_click_config.threshold_pct) ))
                 {
                     sprintf(publishPayload, "{\"event_data\": {\"pressure\":%f, \"temperature\":%f, \"connected_sensor\":\"pressure_click\"}}",
-                            (double)pressure_value, (double)HTS221_temperature);
+                            (double)pressure_value, (double)temperature_value);
                     if (APP_Send_MQTTMessage(publishPayload) != MQTT_CODE_SUCCESS)
                     {
                         appData.state = APP_TCPIP_ERROR;
@@ -1244,7 +1244,7 @@ void APP_Tasks ( void )
                     }
                     
                     appData.last_pressure_value = (double)pressure_value;
-                    appData.last_temperature_value = (double)HTS221_temperature;
+                    appData.last_temperature_value = (double)temperature_value;
                     
                     // Reset send pressure_click timer
                     APP_TIMER_Set(&appData.mqttSendPressureClick);
@@ -1460,7 +1460,7 @@ void APP_Tasks ( void )
 			display_message=0;
 			break;
 		case 3:
-			SYS_CONSOLE_PRINT("App: Pressure=%d\r\n", pressure_value);
+			SYS_CONSOLE_PRINT("App: Pressure=%d Temperature=%.2f\r\n", pressure_value,temperature_value);
 			display_message=0;
 			break;
 		case 4:
