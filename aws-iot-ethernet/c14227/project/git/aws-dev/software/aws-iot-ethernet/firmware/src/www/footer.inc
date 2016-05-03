@@ -1,6 +1,9 @@
 		</div>
 		<div id="footer">
-			Copyright &copy; 2016 Microchip Technology, Inc. Ver 1.4.0
+			Copyright © 2016, Medium One Inc. ÊDeveloped by Saritasa
+		</div>
+		<div>
+			<img src="images/saritasa.png" alt="Saritasa">
 		</div>
 	</div>
 	<script src="javascript/mchp.js" type="text/javascript">
