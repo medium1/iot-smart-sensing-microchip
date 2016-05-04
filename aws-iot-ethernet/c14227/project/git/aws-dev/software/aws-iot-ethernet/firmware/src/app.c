@@ -1658,7 +1658,7 @@ void APP1_Tasks ( void )
 					pressure_temp_read();
 					app1Data.newPressureSamp = pressure_value;
 					tempVal = app1Data.newPressureSamp;
-					if (tempVal != app1Data.pressureValue)
+					if (tempVal != app1Data.pressureValue && tempVal > 0)
 					{
 						app1Data.pressureValue = tempVal;
 						app1Data.pressureChanged = true;
