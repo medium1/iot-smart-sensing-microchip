@@ -1250,7 +1250,7 @@ void APP_Tasks ( void )
                 int nTempWaittingTime = (appData.temperature_click_config.period_sec>0)?
                         appData.temperature_click_config.period_sec:DEFAULT_TEMPERATURE_CLICK_INTERVAL;
                 if (nWaittingTime>nTempWaittingTime) nWaittingTime = nTempWaittingTime;
-                if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK && 
+				if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK && pressure_value > 0 &&
                     ( APP_TIMER_Expired(&appData.mqttSendPressureClick, nWaittingTime) ||
                       (pressure_changed_percent >= appData.pressure_click_config.threshold_pct) ||
                       (temperature_changed_percent >= appData.temperature_click_config.threshold_pct) ))
