@@ -58,6 +58,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "parson.h"
 #include "bsp_config.h"
 #include "wolfmqttsdk/wolfmqtt/mqtt_client.h"
+#include <math.h>
 
 // *****************************************************************************
 // *****************************************************************************
@@ -95,7 +96,6 @@ extern char validConfig;
 #define DEFAULT_AIR_QUALITY_CLICK_INTERVAL 600
 #define DEFAULT_MOTION_CLICK_INTERVAL 60
 #define SEND_DEVICE_INFO_INTERVAL 600
-#define TOTAL_CLICK_DEVICE 3
 #define MOTION_DURATION 60
 #define AIR_DURATION 600
 #define HUMD_DURATION 600
@@ -103,7 +103,7 @@ extern char validConfig;
 #define TENMINUTES_DURATION 600
 #define SAMPLE_DURATION 5
 #define PRESSURE_DURATION 600
-#define TOTAL_CLICK 3
+#define POT_MARGIN 3
 #define IOT_ETHERNET 1
 
 unsigned char configurationSignature[256];
@@ -702,7 +702,9 @@ void APP_SaveConfiguration ( void )
     if (ret)
     {
         SYS_CONSOLE_PRINT("App:  Writing configuration to NVM - success\r\n");
-    } else{
+	}
+	else
+	{
         SYS_CONSOLE_PRINT("App:  Writing configuration to NVM - failed\r\n");
         while(1);
     }
@@ -744,7 +746,9 @@ void APP_Save_SensorConfiguration ( void )
     if (ret)
     {
         SYS_CONSOLE_PRINT("App:  Writing sensors configuration to NVM - success\r\n");
-    } else{
+	}
+	else
+	{
         SYS_CONSOLE_PRINT("App:  Writing sensors configuration to NVM - failed\r\n");
         while(1);
     }
@@ -809,16 +813,20 @@ int APP_Send_DeviceInfo ( void )
     char led3_status = (BSP_LEDStateGet(BSP_LED_3_CHANNEL, BSP_LED_3_PORT) == BSP_LED_STATE_ON);
     char led4_status = (BSP_LEDStateGet(BSP_LED_4_CHANNEL, BSP_LED_4_PORT) == BSP_LED_STATE_ON);
 
-    if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK) {
+	if (appData.app_sensor_type == APP_SENSOR_TYPE_PRESSURE_CLICK)
+	{
         strcpy(connected_sensor, "pressure_click");
     }
-    else if (appData.app_sensor_type == APP_SENSOR_TYPE_AIR_QUALITY_CLICK) {
+	else if (appData.app_sensor_type == APP_SENSOR_TYPE_AIR_QUALITY_CLICK)
+	{
         strcpy(connected_sensor, "air_quality_click");
     }
-    else if (appData.app_sensor_type == APP_SENSOR_TYPE_HUMIDITY_CLICK) {
+	else if (appData.app_sensor_type == APP_SENSOR_TYPE_HUMIDITY_CLICK)
+	{
         strcpy(connected_sensor, "humidity_click");
     }
-    else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK) {
+	else if (appData.app_sensor_type == APP_SENSOR_TYPE_MOTION_CLICK)
+	{
         strcpy(connected_sensor, "motion_click");
     }
 
@@ -1357,18 +1365,19 @@ void APP_Tasks ( void )
 
                 // Check & send potentiometer event
                 uint32_t potVal;
-                if (uxQueueMessagesWaiting(app1Data.potentiometerQueue) > 0)
-                {
+				if (uxQueueMessagesWaiting(app1Data.potentiometerQueue) > 0 && app1Data.potChanged == true)
+				{
                     xQueueReceive( app1Data.potentiometerQueue, &potVal, 1);
-                    sprintf(publishPayload, "{\"event_data\": {\"pot\":%d}}", potVal);
+					sprintf(publishPayload, "{\"event_data\": {\"pot\":%d}}", app1Data.potValue);
                     if (APP_Send_MQTTMessage(publishPayload) != MQTT_CODE_SUCCESS)
                     {
                         appData.state = APP_TCPIP_ERROR;
                         break;
                     }
-                }
-                
-                
+					app1Data.potChanged = false;
+				}
+
+
 				// Check & send switches event	
                 struct switchMessage switchMsg;
                 if (uxQueueMessagesWaiting(app1Data.switchQueue ) > 0)
@@ -1608,10 +1617,10 @@ void APP1_Tasks ( void )
 				{
 					if (DRV_ADC_DigitalFilter0_DataIsReady())
 					{
-						uint32_t adcVal;
+						int adcVal;
 						app1Data.newPotSamp = (uint16_t)DRV_ADC_DigitalFilter0_DataRead();
 						adcVal = app1Data.newPotSamp >> 6;
-						if ((adcVal-app1Data.potValue) > 1 || (app1Data.potValue-adcVal) > 1)
+						if (abs(adcVal-app1Data.potValue) > POT_MARGIN)
 						{
 							app1Data.potValue = adcVal;
 							app1Data.potChanged = true;
