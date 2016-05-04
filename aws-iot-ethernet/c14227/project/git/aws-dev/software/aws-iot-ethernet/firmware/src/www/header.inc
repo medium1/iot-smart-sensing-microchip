@@ -10,9 +10,4 @@
 	<body>
 	<div id="page">
 		<div id="content">
-			<div class="logo">
-				<div>
-					<img src="images/m1.png" alt="Medium One">
-				</div>
-			</div>
-
+			<img class="logo" src="images/m1.png" alt="Medium One">

@@ -400,7 +400,7 @@ extern "C" {
 
 /*** HTTP Configuration ***/
 #define TCPIP_STACK_USE_HTTP_SERVER
-#define TCPIP_HTTP_MAX_HEADER_LEN		    		15
+#define TCPIP_HTTP_MAX_HEADER_LEN		    		32
 #define TCPIP_HTTP_CACHE_LEN		        		"600"
 #define TCPIP_HTTP_TIMEOUT		            		45
 #define TCPIP_HTTP_MAX_CONNECTIONS		    		1
@@ -408,7 +408,7 @@ extern "C" {
 #define TCPIP_HTTP_DEFAULT_FILE		        		"index.htm"
 #define TCPIP_HTTPS_DEFAULT_FILE	        		"index.htm"
 #define TCPIP_HTTP_DEFAULT_LEN		        		10
-#define TCPIP_HTTP_MAX_DATA_LEN		        		4096
+#define TCPIP_HTTP_MAX_DATA_LEN		        		8192
 #define TCPIP_HTTP_MIN_CALLBACK_FREE				16
 #define TCPIP_HTTP_SKT_TX_BUFF_SIZE		    		0
 #define TCPIP_HTTP_SKT_RX_BUFF_SIZE		    		0

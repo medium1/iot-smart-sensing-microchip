@@ -190,6 +190,11 @@ int APP_tcpipConnect_cb(void *context, const char* host, word16 port, int timeou
 	}
 	else if (dnsResult == TCPIP_DNS_RES_OK)
 	{
+        sprintf(appData.remote_ip, "%d.%d.%d.%d", appData.host_ipv4.v4Add.v[0],
+								appData.host_ipv4.v4Add.v[1],
+								appData.host_ipv4.v4Add.v[2],
+								appData.host_ipv4.v4Add.v[3]);
+        
 		SYS_CONSOLE_PRINT("App:  DNS:  Resolved IPv4 Address: %d.%d.%d.%d for host '%s'\r\n",
 								appData.host_ipv4.v4Add.v[0],
 								appData.host_ipv4.v4Add.v[1],
@@ -848,6 +853,13 @@ void APP_Initialize ( void )
     appData.state = APP_STATE_INIT;
     XMEMSET(appData.host, '\0', sizeof(appData.host));
     appData.port = MediumOne_IOT_PORT;
+    appData.remote_ip[0] = 0;
+    appData.project_mqtt_id[0] = 0;
+    appData.user_mqtt_id[0] = 0;
+    appData.api_key[0] = 0;
+    appData.api_password[0] = 0;
+    appData.device_name[0] = 0;
+    appData.app_sensor_type = APP_SENSOR_TYPE_NONE;
     
     // Initialize MQTT net callbacks
     appData.myNet.connect = APP_tcpipConnect_cb;

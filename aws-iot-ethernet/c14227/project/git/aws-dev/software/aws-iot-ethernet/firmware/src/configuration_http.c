@@ -48,7 +48,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "app.h"
 #include "app_nvm_support.h"
-
+#include "wolfmqttsdk/wolfmqtt/mqtt_client.h"
 
 /****************************************************************************
   Section:
@@ -180,9 +180,6 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     char api_password[256] = "";
     APP_SENSOR_TYPE app_sensor_type;
     
-    char clientCert[2048];
-    char clientKey[2048];
-    
     byteCount = TCPIP_HTTP_CurrentConnectionByteCountGet(connHandle);
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
     if(byteCount > TCPIP_TCP_GetIsReady(sktHTTP) + TCPIP_TCP_FifoRxFreeGet(sktHTTP))
@@ -284,16 +281,6 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
                 bConfigFailure = true;
             }
         }
-        else if(!strcmp((char*)httpDataBuff, (const char*)"cc"))
-        {
-            memcpy((uint8_t *)clientCert, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            clientCert[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
-        }
-        else if(!strcmp((char*)httpDataBuff, (const char*)"ck"))
-        {
-            memcpy((uint8_t *)clientKey, (void*)(httpDataBuff+nMAX_FIELD_NAME_LEN), strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN)));
-            clientKey[strlen((char*)(httpDataBuff+nMAX_FIELD_NAME_LEN))] = 0; /* Terminate string */
-        }
     }
 
     SYS_CONSOLE_PRINT("Web submit configuration - host '%s'\r\n", host);
@@ -319,8 +306,11 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         SYS_CONSOLE_MESSAGE("App:  Received configuration from webpage, writing to NVM...\r\n");
 		APP_SaveConfiguration();
                         
-        //TODO: Check is it safe if we force change state like this to support configure modify on fly
-        appData.state = APP_TCPIP_WAIT_CONFIGURATION;
+        if (appData.state > APP_TCPIP_MQTT_PROTOCOL_CONNECT)
+        {
+            MqttClient_Disconnect(&appData.myClient);
+            appData.state = APP_TCPIP_MQTT_PROTOCOL_CONNECT;
+        }
     }
     else {
         bConfigFailure = true;
@@ -331,13 +321,12 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         // All parsing complete!  Save new settings and force an interface restart
         // Set the interface to restart and display reconnecting information
         strcpy((char*)httpDataBuff, "reconnect.htm?");
-        /*httpDataBuff[20+16] = 0x00; // Force null termination
+        httpDataBuff[20+16] = 0x00; // Force null termination
         for(i = 20; i < 20u+16u; i++)
         {
             if(httpDataBuff[i] == ' ')
                 httpDataBuff[i] = 0x00;
-        }
-        */ 
+        } 
     }
     else
     {   // Configuration error
@@ -386,5 +375,73 @@ void TCPIP_HTTP_Print_uuid(HTTP_CONN_HANDLE connHandle)
     TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)appData.uuid); //nextSSID
 }
 
+void TCPIP_HTTP_Print_ProjectMQTTID(HTTP_CONN_HANDLE connHandle)
+{
+    char temp[16] = "";
+    int len = strlen(appData.project_mqtt_id);
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    if (len>4)
+    {
+        sprintf(temp, "****%s", appData.project_mqtt_id + len - 4);
+    }
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)temp);
+}
+
+void TCPIP_HTTP_Print_UserMQTTID(HTTP_CONN_HANDLE connHandle)
+{
+    char temp[16] = "";
+    int len = strlen(appData.user_mqtt_id);
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    if (len>4)
+    {
+        sprintf(temp, "****%s", appData.user_mqtt_id + len - 4);
+    }
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)temp);
+}
+
+void TCPIP_HTTP_Print_APIKey(HTTP_CONN_HANDLE connHandle)
+{
+    char temp[16] = "";
+    int len = strlen(appData.api_key);
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    if (len>8)
+    {
+        sprintf(temp, "****%s", appData.api_key + len - 8);
+    }
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)temp);
+}
+
+void TCPIP_HTTP_Print_DeviceName(HTTP_CONN_HANDLE connHandle)
+{
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)appData.device_name);
+}
+
+void TCPIP_HTTP_Print_SensorType(HTTP_CONN_HANDLE connHandle)
+{
+    static const char * const sensor_type_name[] = { "NONE", "Pressure Click", "Air Quality Click", "Humidity Click", "MotionClick" };
+            
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)sensor_type_name[appData.app_sensor_type]);
+}
+
+void TCPIP_HTTP_Print_localIP(HTTP_CONN_HANDLE connHandle)
+{
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)appData.local_ip);
+}
+
+void TCPIP_HTTP_Print_remoteIP(HTTP_CONN_HANDLE connHandle)
+{
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)appData.remote_ip);
+}
 
 #endif

@@ -1,13 +1,13 @@
 		</div>
+		<br>
 		<div id="footer">
-			Copyright © 2016, Medium One Inc. ÊDeveloped by Saritasa
+			Copyright &copy; 2016, Medium One Inc. Developed by Saritasa
 		</div>
+		<br>
 		<div>
-			<img src="images/saritasa.png" alt="Saritasa">
+			<img class="logo" src="images/saritasa.png" alt="Saritasa">
 		</div>
 	</div>
-	<script src="javascript/mchp.js" type="text/javascript">
-	</script>
 	</body>
 </html>
 

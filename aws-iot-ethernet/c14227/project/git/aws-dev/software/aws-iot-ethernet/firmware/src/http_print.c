@@ -41,6 +41,12 @@
 #include "tcpip/tcpip.h"
 
 void TCPIP_HTTP_Print(HTTP_CONN_HANDLE connHandle,uint32_t callbackID);
+void TCPIP_HTTP_Print_ProjectMQTTID(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_UserMQTTID(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_APIKey(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_DeviceName(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_SensorType(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_localIP(HTTP_CONN_HANDLE connHandle);
 void TCPIP_HTTP_Print_remoteServer(HTTP_CONN_HANDLE connHandle);
 void TCPIP_HTTP_Print_uuid(HTTP_CONN_HANDLE connHandle);
 
@@ -56,9 +62,27 @@ TCP_SOCKET sktHTTP;
 			TCPIP_HTTP_FileInclude(connHandle,(const uint8_t*)"footer.inc");
 			break;
         case 0x00000002:
-			TCPIP_HTTP_Print_remoteServer(connHandle);
+			TCPIP_HTTP_Print_ProjectMQTTID(connHandle);
 			break;
         case 0x00000003:
+			TCPIP_HTTP_Print_UserMQTTID(connHandle);
+			break;
+        case 0x00000004:
+			TCPIP_HTTP_Print_APIKey(connHandle);
+			break;
+        case 0x00000005:
+			TCPIP_HTTP_Print_DeviceName(connHandle);
+			break;
+        case 0x00000006:
+			TCPIP_HTTP_Print_SensorType(connHandle);
+			break;
+        case 0x00000007:
+			TCPIP_HTTP_Print_localIP(connHandle);
+			break;
+        case 0x00000008:
+			TCPIP_HTTP_Print_remoteServer(connHandle);
+			break;
+        case 0x00000009:
 			TCPIP_HTTP_Print_uuid(connHandle);
 			break;
 		default:

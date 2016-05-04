@@ -220,7 +220,8 @@ typedef struct
 		IP_MULTI_ADDRESS  host_ipv4;
 
 		TCPIP_MAC_ADDR          macAddress;
-		unsigned char local_ip[16]; 
+		unsigned char local_ip[16];
+        unsigned char remote_ip[16];
 
 		// NVM Driver
 		DRV_HANDLE nvmHandle;

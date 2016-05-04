@@ -1,4 +1,5 @@
 ~inc:header.inc~
+			<br>
 			<div id="title">
 				<h2>
 					IOT Monitoring Kit Configuration
@@ -6,9 +7,6 @@
 				<div>
 					Visit <a href="http://mediumone.com/microchip">mediumone.com/microchip</a> for activation instructions and to learn more
 				</div>
-				<span id="hello">
-				&nbsp;
-				</span>
 			</div>
 			<div class="rounded_container" id="network_config">
 				<table>
@@ -62,12 +60,13 @@
 			</div>
 			<br>
 			<div>&emsp;&emsp;&emsp;Current configuration:</div>
-			<div>&emsp;&emsp;&emsp;Project MQTT ID: Comming soon...</div>
-			<div>&emsp;&emsp;&emsp;User MQTT ID: Comming soon...</div>
-			<div>&emsp;&emsp;&emsp;API Key: Comming soon...</div>
-			<div>&emsp;&emsp;&emsp;Device Name: Comming soon...</div>
-			<div>&emsp;&emsp;&emsp;Sensor Type: Comming soon...</div>
-			<div>&emsp;&emsp;&emsp;IP Address: Comming soon...</div>
+			<div>&emsp;&emsp;&emsp;&emsp;&emsp;Project MQTT ID: ~ProjectMQTTID~</div>
+			<div>&emsp;&emsp;&emsp;&emsp;&emsp;User MQTT ID: ~UserMQTTID~</div>
+			<div>&emsp;&emsp;&emsp;&emsp;&emsp;API Key: ~APIKey~</div>
+			<div>&emsp;&emsp;&emsp;&emsp;&emsp;Device Name: ~DeviceName~</div>
+			<div>&emsp;&emsp;&emsp;&emsp;&emsp;Sensor Type: ~SensorType~</div>
+			<div>&emsp;&emsp;&emsp;&emsp;&emsp;IP Address: ~localIP~</div>
+			<br>
 
 			<form method="post" name="kickoff" action="">
 				<input type="hidden" id="project_mqtt_id" name="project_mqtt_id"></input>
