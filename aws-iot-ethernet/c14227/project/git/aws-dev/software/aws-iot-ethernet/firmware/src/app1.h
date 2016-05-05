@@ -126,7 +126,7 @@ typedef struct
     QueueHandle_t pressureQueue;
     
     uint32_t    newPotSamp;
-    uint32_t    potValue;
+    int         potValue;
     bool        potChanged;
     
     uint32_t    newAirSamp;
