@@ -1,5 +1,4 @@
 ~inc:header.inc~
-			<br>
 			<div id="title">
 				<h2>
 					IOT Monitoring Kit Configuration
@@ -11,37 +10,47 @@
 			<div class="rounded_container" id="network_config">
 				<table>
 					<tr>
-						<td>Project MQTT ID:</td>
+						<td></td>
+						<td></td>
+						<td class="grey_text">&emsp;Current configuration:</td>
+					</tr>
+					<tr>
+						<td class="align_right">Project MQTT ID:</td>
 						<td>
 							<input id="_project_mqtt_id" type="text" name="_project_mqtt_id" maxlength="255" class="ssid1" value="">
 						</td>
+						<td class="grey_text">&emsp;~ProjectMQTTID~</td>
 					</tr>
 					<tr>
-						<td>User MQTT ID:</td>
+						<td class="align_right">User MQTT ID:</td>
 						<td>
 							<input id="_user_mqtt_id" type="text" name="_user_mqtt_id" maxlength="255" class="ssid1" value="">
 						</td>
+						<td class="grey_text">&emsp;~UserMQTTID~</td>
 					</tr>
 					<tr>
-						<td>API Key:</td>
+						<td class="align_right">API Key:</td>
 						<td>
 							<input id="_api_key" type="text" name="_api_key" maxlength="255" class="ssid1" value="">
 						</td>
+						<td class="grey_text">&emsp;~APIKey~</td>
 					</tr>
 					<tr>
-						<td>API Password:</td>
+						<td class="align_right">API Password:</td>
 						<td>
 							<input id="_api_password" type="text" name="_api_password" maxlength="255" class="ssid1" value="">
 						</td>
+						<td class="grey_text">&emsp;~APIPassword~</td>
 					</tr>
 					<tr>
-						<td>Device Name:</td>
+						<td class="align_right">Device Name:</td>
 						<td>
 							<input id="_device_name" type="text" name="_device_name" maxlength="255" class="ssid1" value="">
 						</td>
+						<td class="grey_text">&emsp;~DeviceName~</td>
 					</tr>
 					<tr>
-						<td>Sensor Type:</td>
+						<td class="align_right">Sensor Type:</td>
 						<td>
 							<select id="_sensor_type" name="_sensor_type">
 								<option value="none">None</option>
@@ -50,6 +59,7 @@
 								<option value="humidity_click">Humidity Click</option>
 								<option value="motion_click">Motion Click</option>
 							</select>										</td>
+						<td class="grey_text">&emsp;~SensorType~</td>
 					</tr>
 					<tr>
 						<td colspan="2" class="text-right">
@@ -59,15 +69,9 @@
 				</table>
 			</div>
 			<br>
-			<div>&emsp;&emsp;&emsp;Current configuration:</div>
-			<div>&emsp;&emsp;&emsp;&emsp;&emsp;Project MQTT ID: ~ProjectMQTTID~</div>
-			<div>&emsp;&emsp;&emsp;&emsp;&emsp;User MQTT ID: ~UserMQTTID~</div>
-			<div>&emsp;&emsp;&emsp;&emsp;&emsp;API Key: ~APIKey~</div>
-			<div>&emsp;&emsp;&emsp;&emsp;&emsp;Device Name: ~DeviceName~</div>
-			<div>&emsp;&emsp;&emsp;&emsp;&emsp;Sensor Type: ~SensorType~</div>
-			<div>&emsp;&emsp;&emsp;&emsp;&emsp;IP Address: ~localIP~</div>
-			<br>
-
+			<div class="rounded_container" id="network_status">
+				<iframe scrolling="no" frameborder=0 src="status.htm"></iframe>
+			</div>
 			<form method="post" name="kickoff" action="">
 				<input type="hidden" id="project_mqtt_id" name="project_mqtt_id"></input>
 				<input type="hidden" id="user_mqtt_id" name="user_mqtt_id"></input>

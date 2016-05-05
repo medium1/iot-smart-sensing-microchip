@@ -44,11 +44,14 @@ void TCPIP_HTTP_Print(HTTP_CONN_HANDLE connHandle,uint32_t callbackID);
 void TCPIP_HTTP_Print_ProjectMQTTID(HTTP_CONN_HANDLE connHandle);
 void TCPIP_HTTP_Print_UserMQTTID(HTTP_CONN_HANDLE connHandle);
 void TCPIP_HTTP_Print_APIKey(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_APIPassword(HTTP_CONN_HANDLE connHandle);
 void TCPIP_HTTP_Print_DeviceName(HTTP_CONN_HANDLE connHandle);
 void TCPIP_HTTP_Print_SensorType(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_uuid(HTTP_CONN_HANDLE connHandle);
 void TCPIP_HTTP_Print_localIP(HTTP_CONN_HANDLE connHandle);
 void TCPIP_HTTP_Print_remoteServer(HTTP_CONN_HANDLE connHandle);
-void TCPIP_HTTP_Print_uuid(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_remoteIP(HTTP_CONN_HANDLE connHandle);
+void TCPIP_HTTP_Print_currentStatus(HTTP_CONN_HANDLE connHandle);
 
 void TCPIP_HTTP_Print(HTTP_CONN_HANDLE connHandle,uint32_t callbackID)
 {
@@ -71,19 +74,28 @@ TCP_SOCKET sktHTTP;
 			TCPIP_HTTP_Print_APIKey(connHandle);
 			break;
         case 0x00000005:
-			TCPIP_HTTP_Print_DeviceName(connHandle);
+			TCPIP_HTTP_Print_APIPassword(connHandle);
 			break;
         case 0x00000006:
-			TCPIP_HTTP_Print_SensorType(connHandle);
+			TCPIP_HTTP_Print_DeviceName(connHandle);
 			break;
         case 0x00000007:
-			TCPIP_HTTP_Print_localIP(connHandle);
+			TCPIP_HTTP_Print_SensorType(connHandle);
 			break;
         case 0x00000008:
-			TCPIP_HTTP_Print_remoteServer(connHandle);
+			TCPIP_HTTP_Print_uuid(connHandle);
 			break;
         case 0x00000009:
-			TCPIP_HTTP_Print_uuid(connHandle);
+			TCPIP_HTTP_Print_localIP(connHandle);
+			break;
+        case 0x0000000a:
+			TCPIP_HTTP_Print_remoteServer(connHandle);
+			break;
+        case 0x0000000b:
+			TCPIP_HTTP_Print_remoteIP(connHandle);
+			break;
+        case 0x0000000c:
+			TCPIP_HTTP_Print_currentStatus(connHandle);
 			break;
 		default:
 			// Output notification for undefined values

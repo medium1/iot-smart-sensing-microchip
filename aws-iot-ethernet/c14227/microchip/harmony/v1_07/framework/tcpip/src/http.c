@@ -1018,7 +1018,12 @@ static void TCPIP_HTTP_ProcessConnection(HTTP_CONN* pHttpCon)
 
                 // If not GET or POST, we're done
                 if(pHttpCon->httpStatus != HTTP_GET && pHttpCon->httpStatus != HTTP_POST)
-                {// Disconnect
+                {
+                    if (!strcmp(pHttpCon->data, "ADD-HEADER::")) 
+                    {
+                        TCPIP_TCP_StringPut(pHttpCon->socket, pHttpCon->data + 12);
+                    }
+                    // Disconnect
                     pHttpCon->sm = SM_HTTP_DISCONNECT;
                     break;
                 }

@@ -185,6 +185,7 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     if(byteCount > TCPIP_TCP_GetIsReady(sktHTTP) + TCPIP_TCP_FifoRxFreeGet(sktHTTP))
     {   // Configuration Failure
         lastFailure = true;
+        strcpy((char*)httpDataBuff, "error.htm");
         TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
         return HTTP_IO_DONE;
     }
@@ -320,13 +321,12 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     {
         // All parsing complete!  Save new settings and force an interface restart
         // Set the interface to restart and display reconnecting information
-        strcpy((char*)httpDataBuff, "reconnect.htm?");
-        httpDataBuff[20+16] = 0x00; // Force null termination
-        for(i = 20; i < 20u+16u; i++)
-        {
-            if(httpDataBuff[i] == ' ')
-                httpDataBuff[i] = 0x00;
-        } 
+#ifdef ADD_LOCATION_HEADER
+        strcpy((char*)httpDataBuff, "ADD-HEADER::Location: .\r\n");
+#else
+        strcpy((char*)httpDataBuff, ".");
+        TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
+#endif        
     }
     else
     {   // Configuration error
@@ -334,10 +334,9 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         if(httpDataBuff)
         {
             strcpy((char*)httpDataBuff, "error.htm");
+            TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
         }
     }
-
-    TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
 
     return HTTP_IO_DONE;
 }
@@ -365,7 +364,7 @@ void TCPIP_HTTP_Print_remoteServer(HTTP_CONN_HANDLE connHandle)
 {
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
-    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)appData.host);
+    TCPIP_TCP_StringPut(sktHTTP, (appData.host[0]) ? (const uint8_t*)appData.host : (const uint8_t*)"NA");
 }
 
 void TCPIP_HTTP_Print_uuid(HTTP_CONN_HANDLE connHandle)
@@ -377,7 +376,7 @@ void TCPIP_HTTP_Print_uuid(HTTP_CONN_HANDLE connHandle)
 
 void TCPIP_HTTP_Print_ProjectMQTTID(HTTP_CONN_HANDLE connHandle)
 {
-    char temp[16] = "";
+    char temp[16] = "NA";
     int len = strlen(appData.project_mqtt_id);
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
@@ -385,12 +384,16 @@ void TCPIP_HTTP_Print_ProjectMQTTID(HTTP_CONN_HANDLE connHandle)
     {
         sprintf(temp, "****%s", appData.project_mqtt_id + len - 4);
     }
+    else if (len>0) 
+    {
+        sprintf(temp, "%s", appData.project_mqtt_id);
+    }
     TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)temp);
 }
 
 void TCPIP_HTTP_Print_UserMQTTID(HTTP_CONN_HANDLE connHandle)
 {
-    char temp[16] = "";
+    char temp[16] = "NA";
     int len = strlen(appData.user_mqtt_id);
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
@@ -398,18 +401,39 @@ void TCPIP_HTTP_Print_UserMQTTID(HTTP_CONN_HANDLE connHandle)
     {
         sprintf(temp, "****%s", appData.user_mqtt_id + len - 4);
     }
+    else if (len>0) 
+    {
+        sprintf(temp, "%s", appData.user_mqtt_id);
+    }
     TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)temp);
 }
 
 void TCPIP_HTTP_Print_APIKey(HTTP_CONN_HANDLE connHandle)
 {
-    char temp[16] = "";
+    char temp[16] = "NA";
     int len = strlen(appData.api_key);
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
     if (len>8)
     {
         sprintf(temp, "****%s", appData.api_key + len - 8);
+    }
+    else if (len>0) 
+    {
+        sprintf(temp, "%s", appData.api_key);
+    }
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)temp);
+}
+
+void TCPIP_HTTP_Print_APIPassword(HTTP_CONN_HANDLE connHandle)
+{
+    char temp[16] = "NA";
+    int len = strlen(appData.api_password);
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    if (len>0)
+    {
+        sprintf(temp, "********");
     }
     TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)temp);
 }
@@ -418,12 +442,12 @@ void TCPIP_HTTP_Print_DeviceName(HTTP_CONN_HANDLE connHandle)
 {
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
-    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)appData.device_name);
+    TCPIP_TCP_StringPut(sktHTTP, (appData.device_name[0]) ? (const uint8_t*)appData.device_name : (const uint8_t*)"NA");
 }
 
 void TCPIP_HTTP_Print_SensorType(HTTP_CONN_HANDLE connHandle)
 {
-    static const char * const sensor_type_name[] = { "NONE", "Pressure Click", "Air Quality Click", "Humidity Click", "MotionClick" };
+    static const char * const sensor_type_name[] = { "NONE", "Pressure Click", "Air Quality Click", "Humidity Click", "Motion Click" };
             
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
@@ -434,14 +458,37 @@ void TCPIP_HTTP_Print_localIP(HTTP_CONN_HANDLE connHandle)
 {
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
-    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)appData.local_ip);
+    TCPIP_TCP_StringPut(sktHTTP, (appData.local_ip[0]) ? (const uint8_t*)appData.local_ip : (const uint8_t*)"NA");
 }
 
 void TCPIP_HTTP_Print_remoteIP(HTTP_CONN_HANDLE connHandle)
 {
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
-    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)appData.remote_ip);
+    TCPIP_TCP_StringPut(sktHTTP, (appData.remote_ip[0]) ? (const uint8_t*)appData.remote_ip : (const uint8_t*)"NA");
+}
+
+void TCPIP_HTTP_Print_currentStatus(HTTP_CONN_HANDLE connHandle)
+{
+    static const char * const app_status[] = 
+        {
+            "Initializing...", //APP_STATE_INIT=0,
+            "File system loading...", //APP_NVM_MOUNT_DISK,
+            "NVM erasing...", // APP_NVM_ERASE_CONFIGURATION,
+            "NVM configuration loading...", //APP_NVM_LOAD_CONFIGURATION,
+            "TCP initializing...", // APP_TCPIP_WAIT_INIT,
+            "TCP IP address obtaining...", // APP_TCPIP_WAIT_FOR_IP,
+            "MQTT configuration input waiting...", // APP_TCPIP_WAIT_CONFIGURATION,
+            "MQTT initializing...", // APP_TCPIP_MQTT_INIT,
+            "MQTT network connecting...", // APP_TCPIP_MQTT_NET_CONNECT,
+            "MQTT protocol establishing...", // APP_TCPIP_MQTT_PROTOCOL_CONNECT,
+            "MQTT subscribing...", // APP_TCPIP_MQTT_SUBSCRIBE,
+            "MQTT connected", //APP_TCPIP_MQTT_LOOP,
+            "MQTT connection error" //APP_TCPIP_ERROR,
+        };
+    TCP_SOCKET sktHTTP;
+    sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
+    TCPIP_TCP_StringPut(sktHTTP, (const uint8_t*)app_status[appData.state]);
 }
 
 #endif

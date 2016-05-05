@@ -3,8 +3,11 @@
 +ProjectMQTTID
 +UserMQTTID
 +APIKey
++APIPassword
 +DeviceName
 +SensorType
++uuid
 +localIP
 +remoteServer
-+uuid
++remoteIP
++currentStatus
