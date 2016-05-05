@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<configuration version="1.0.7.16">
-  <General>
-    <HarmonyPath path="../../../../../../../microchip/harmony/v1_07_01"/>
-    <ForceOptimization flag="true"/>
-  </General>
-</configuration>
