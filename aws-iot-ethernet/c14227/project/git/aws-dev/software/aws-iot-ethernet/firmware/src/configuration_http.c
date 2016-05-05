@@ -180,13 +180,19 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     char api_password[256] = "";
     APP_SENSOR_TYPE app_sensor_type;
     
+    // Use current config in non-volatile memory as defaults
+    httpDataBuff = TCPIP_HTTP_CurrentConnectionDataBufferGet(connHandle);
     byteCount = TCPIP_HTTP_CurrentConnectionByteCountGet(connHandle);
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);
     if(byteCount > TCPIP_TCP_GetIsReady(sktHTTP) + TCPIP_TCP_FifoRxFreeGet(sktHTTP))
     {   // Configuration Failure
         lastFailure = true;
-        strcpy((char*)httpDataBuff, "error.htm");
-        TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
+        if(httpDataBuff)
+        {
+            memset(httpDataBuff, 0, 512);
+            strcpy((char*)httpDataBuff, "error.htm");
+            TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
+        }
         return HTTP_IO_DONE;
     }
 
@@ -194,9 +200,6 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     // all of it to arrive.
     if(TCPIP_TCP_GetIsReady(sktHTTP) < byteCount)
         return HTTP_IO_NEED_DATA;
-
-    // Use current config in non-volatile memory as defaults
-    httpDataBuff = TCPIP_HTTP_CurrentConnectionDataBufferGet(connHandle);
 
     int nMAX_FIELD_NAME_LEN = 32;
     
@@ -319,6 +322,8 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     
     if(bConfigFailure == false)
     {
+        memset(httpDataBuff, 0, 512);
+        
         // All parsing complete!  Save new settings and force an interface restart
         // Set the interface to restart and display reconnecting information
 #ifdef ADD_LOCATION_HEADER
@@ -333,6 +338,7 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         lastFailure = true;
         if(httpDataBuff)
         {
+            memset(httpDataBuff, 0, 512);
             strcpy((char*)httpDataBuff, "error.htm");
             TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
         }
@@ -472,19 +478,19 @@ void TCPIP_HTTP_Print_currentStatus(HTTP_CONN_HANDLE connHandle)
 {
     static const char * const app_status[] = 
         {
-            "Initializing...", //APP_STATE_INIT=0,
-            "File system loading...", //APP_NVM_MOUNT_DISK,
-            "NVM erasing...", // APP_NVM_ERASE_CONFIGURATION,
-            "NVM configuration loading...", //APP_NVM_LOAD_CONFIGURATION,
-            "TCP initializing...", // APP_TCPIP_WAIT_INIT,
-            "TCP IP address obtaining...", // APP_TCPIP_WAIT_FOR_IP,
-            "MQTT configuration input waiting...", // APP_TCPIP_WAIT_CONFIGURATION,
-            "MQTT initializing...", // APP_TCPIP_MQTT_INIT,
-            "MQTT network connecting...", // APP_TCPIP_MQTT_NET_CONNECT,
-            "MQTT protocol establishing...", // APP_TCPIP_MQTT_PROTOCOL_CONNECT,
-            "MQTT subscribing...", // APP_TCPIP_MQTT_SUBSCRIBE,
-            "MQTT connected", //APP_TCPIP_MQTT_LOOP,
-            "MQTT connection error" //APP_TCPIP_ERROR,
+            "<span class=\"blue_text\">Initializing...</span>", //APP_STATE_INIT=0,
+            "<span class=\"blue_text\">File system loading...</span>", //APP_NVM_MOUNT_DISK,
+            "<span class=\"blue_text\">NVM erasing...</span>", // APP_NVM_ERASE_CONFIGURATION,
+            "<span class=\"blue_text\">NVM configuration loading...</span>", //APP_NVM_LOAD_CONFIGURATION,
+            "<span class=\"blue_text\">TCP initializing...</span>", // APP_TCPIP_WAIT_INIT,
+            "<span class=\"red_text\">TCP IP address obtaining...</span>", // APP_TCPIP_WAIT_FOR_IP,
+            "<span class=\"blue_text\">MQTT configuration input waiting...</span>", // APP_TCPIP_WAIT_CONFIGURATION,
+            "<span class=\"red_text\">MQTT initializing...</span>", // APP_TCPIP_MQTT_INIT,
+            "<span class=\"red_text\">MQTT network connecting...</span>", // APP_TCPIP_MQTT_NET_CONNECT,
+            "<span class=\"red_text\">MQTT protocol establishing...</span>", // APP_TCPIP_MQTT_PROTOCOL_CONNECT,
+            "<span class=\"red_text\">MQTT subscribing...</span>", // APP_TCPIP_MQTT_SUBSCRIBE,
+            "<span class=\"green_text\">MQTT connected</span>", //APP_TCPIP_MQTT_LOOP,
+            "<span class=\"red_text\">MQTT connection error</span>" //APP_TCPIP_ERROR,
         };
     TCP_SOCKET sktHTTP;
     sktHTTP = TCPIP_HTTP_CurrentConnectionSocketGet(connHandle);

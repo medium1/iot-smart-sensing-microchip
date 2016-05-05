@@ -7,6 +7,6 @@
 			<img class="logo" src="images/saritasa.png" alt="Saritasa">
 		</div>
 	</div>
-	</body>
+</body>
 </html>
 

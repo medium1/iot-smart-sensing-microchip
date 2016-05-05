@@ -211,5 +211,17 @@ function joinNetwork() {
 	document.kickoff.submit();
 }
 
+function fillInputHashParams()
+{
+	var hashParams = window.location.hash.substr(1).split('&');
+	for(var i=0; i<hashParams.length; i++)
+	{
+		var p = hashParams[i].split('=');
+		document.getElementById(p[0]).value = decodeURIComponent(p[1]);
+	}
+}
+
+window.onload = fillInputHashParams;
+
 //kick off the AJAX Updater
 setTimeout("pollAJAX()", 10);

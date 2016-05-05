@@ -7,7 +7,7 @@
 	<link href="css/mchp-min.css" rel="stylesheet" type="text/css">
 	<script src="javascript/mchp.js" type="text/javascript"></script>
 </head>
-	<body>
+<body>
 	<div id="page">
 		<div id="content">
 			<img class="logo" src="images/m1.png" alt="Medium One">
