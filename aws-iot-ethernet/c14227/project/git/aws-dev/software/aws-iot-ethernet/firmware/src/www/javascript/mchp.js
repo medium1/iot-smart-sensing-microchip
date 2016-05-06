@@ -208,6 +208,8 @@ function joinNetwork() {
 	}
 	document.getElementById("sensor_type").value = sensor_type;
 
+	window.location.hash = '_project_mqtt_id=' + project_mqtt_id + '&_user_mqtt_id=' + user_mqtt_id + '&_api_key=' + api_key + '&_api_password=' + api_password + '&_device_name=' + device_name + '&_sensor_type=' + sensor_type;
+
 	document.kickoff.submit();
 }
 
@@ -222,6 +224,7 @@ function fillInputHashParams()
 }
 
 window.onload = fillInputHashParams;
+window.onhashchange = fillInputHashParams;
 
 //kick off the AJAX Updater
 setTimeout("pollAJAX()", 10);

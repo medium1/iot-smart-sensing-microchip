@@ -859,6 +859,7 @@ void APP_Initialize ( void )
 {
     /* Place the App state machine in its initial state. */
     appData.state = APP_STATE_INIT;
+    appData.lightShowVal = BSP_LED_ALL_OFF;
     XMEMSET(appData.host, '\0', sizeof(appData.host));
     appData.port = MediumOne_IOT_PORT;
     appData.remote_ip[0] = 0;
@@ -1105,7 +1106,9 @@ void APP_Tasks ( void )
 				SYS_CONSOLE_PRINT("App:  MQTT.Client_Init: %s (%d)\r\n", MqttClient_ReturnCodeToString(rc), rc);
 				if (rc != MQTT_CODE_SUCCESS)
 				{
-					SYS_CONSOLE_MESSAGE("App:  MQTT.Client_Init: Failed (catastrophic)\r\n");
+                    appData.lightShowVal = BSP_LED_TCPIP_STACK_INIT_FAILURE;
+                    xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
+              		SYS_CONSOLE_MESSAGE("App:  MQTT.Client_Init: Failed (catastrophic)\r\n");
 					while (1);
 				}
 				APP_TIMER_Set(&appData.genericUseTimer);
@@ -1158,6 +1161,8 @@ void APP_Tasks ( void )
 				SYS_CONSOLE_PRINT("App:  MQTT.Client_Connect: %s (%d)\r\n", MqttClient_ReturnCodeToString(rc), rc);
 				if (rc != MQTT_CODE_SUCCESS)
 				{
+                    appData.lightShowVal = BSP_LED_SERVER_CONNECT_FAILED;
+					xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
 					SYS_CONSOLE_MESSAGE("App:  MQTT.Client_Connect: failed\r\n");
 					APP_TIMER_Set(&appData.genericUseTimer);
 					while (!APP_TIMER_Expired(&appData.genericUseTimer, 5));   
@@ -1176,7 +1181,7 @@ void APP_Tasks ( void )
             	APP_TIMER_Set2(&appData.mqttSendAirQualityClick, -DEFAULT_AIR_QUALITY_CLICK_INTERVAL);
             	APP_TIMER_Set2(&appData.mqttSendMotionClick, -DEFAULT_MOTION_CLICK_INTERVAL);
             
-				appData.state = APP_TCPIP_MQTT_SUBSCRIBE;
+                appData.state = APP_TCPIP_MQTT_SUBSCRIBE;
 				break;
 			}
 
@@ -1208,6 +1213,8 @@ void APP_Tasks ( void )
 										MqttClient_ReturnCodeToString(rc), rc);
 				if (rc != MQTT_CODE_SUCCESS)
 				{
+                    appData.lightShowVal = BSP_LED_SERVER_CONNECT_FAILED;
+                    xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
 					SYS_CONSOLE_MESSAGE("App:  MQTT.Subscribe: failed\r\n");
 					APP_TIMER_Set(&appData.genericUseTimer);
 					while (!APP_TIMER_Expired(&appData.genericUseTimer, 5));   
@@ -1233,7 +1240,7 @@ void APP_Tasks ( void )
                 	break;
             	}
 				
-				appData.state = APP_TCPIP_MQTT_LOOP;
+                appData.state = APP_TCPIP_MQTT_LOOP;
 				break;
 			}
 
@@ -1241,6 +1248,12 @@ void APP_Tasks ( void )
 			{
 				int rc;
 				char publishPayload[512]="";
+                
+                if (appData.lightShowVal != BSP_LED_ALL_GOOD)
+                {
+                    appData.lightShowVal = BSP_LED_ALL_GOOD;
+                    xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
+                }
                 
                 // Pressure_Click
                 double pressure_changed_percent = ABS(pressure_value-appData.last_pressure_value)/appData.last_pressure_value;
@@ -1456,10 +1469,12 @@ void APP_Tasks ( void )
 
 		case APP_TCPIP_ERROR:
 			{
+                appData.lightShowVal = BSP_LED_CONNECTION_FAILED;
+				xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
 				SYS_CONSOLE_PRINT("App: Closing Socket %d\r\n\r\n", appData.socket);
 				NET_PRES_SocketClose(appData.socket);
 				appData.state = APP_TCPIP_MQTT_NET_CONNECT;
-				break;
+                break;
 			}
 
 
