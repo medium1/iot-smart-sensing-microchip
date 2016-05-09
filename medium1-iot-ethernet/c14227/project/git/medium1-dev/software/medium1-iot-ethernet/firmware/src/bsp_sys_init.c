@@ -52,6 +52,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #define BSP_SWITCH_MS_ELLAPSED_TIME_TO_HZ(x) (1250/(x)) // convert time to frequency
 
+extern int txrxLedStateCount;
 BSP_DATA bspData;
 
 // *****************************************************************************
@@ -423,36 +424,42 @@ void BSP_LED_LightShow(BSP_LED_LIGHT_SHOW lightShow)
 			break;
 
 		case    BSP_LED_ALL_GOOD:
-            /*
-			BSP_LEDOff(BSP_LED_5_CHANNEL, BSP_LED_5_PORT);
-			BSP_LEDOff(BSP_LED_6_CHANNEL, BSP_LED_6_PORT);
-			ledTick = SYS_TMR_TickCountGet();
-             */
             if (SYS_TMR_TickCountGet() - ledTick >= 625)
 			{
 				ledTick = SYS_TMR_TickCountGet();
-				BSP_LEDToggle(BSP_LED_7_CHANNEL, BSP_LED_7_PORT);
-				BSP_LEDOff(BSP_LED_6_CHANNEL, BSP_LED_6_PORT);
-                BSP_LEDOff(BSP_LED_5_CHANNEL, BSP_LED_5_PORT);
-				BSP_LEDOff(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
-				BSP_LEDOff(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
-				BSP_LEDOff(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
-				BSP_LEDOff(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
+				BSP_LEDToggle(BSP_LED_6_CHANNEL, BSP_LED_6_PORT);
+				BSP_LEDOff(BSP_LED_5_CHANNEL, BSP_LED_5_PORT);
 			}
 			// Idle state
 			break;
 
 		case    BSP_LED_TX:
-			BSP_LEDOn(BSP_LED_6_CHANNEL, BSP_LED_6_PORT);
-			if (SYS_TMR_TickCountGet() - ledTick >= 30)
-				BSP_LED_LightShowSet(BSP_LED_ALL_GOOD);
-			break;
+			if (txrxLedStateCount==0 ||
+                (txrxLedStateCount<=1 && (SYS_TMR_TickCountGet() - ledTick >= 100)))
+            {
+                txrxLedStateCount++;
+                ledTick = SYS_TMR_TickCountGet();
+                BSP_LEDToggle(BSP_LED_6_CHANNEL, BSP_LED_6_PORT);
+            }
+            else if (txrxLedStateCount>1)
+            {
+                BSP_LED_LightShowSet(BSP_LED_ALL_GOOD);
+			}
+            break;
 
 		case    BSP_LED_RX:
-			BSP_LEDOn(BSP_LED_5_CHANNEL, BSP_LED_5_PORT);
-			if (SYS_TMR_TickCountGet() - ledTick >= 30)
-				BSP_LED_LightShowSet(BSP_LED_ALL_GOOD);
-			break; 
+			if (txrxLedStateCount==0 ||
+                (txrxLedStateCount<=1 && (SYS_TMR_TickCountGet() - ledTick >= 100)))
+            {
+                txrxLedStateCount++;
+                ledTick = SYS_TMR_TickCountGet();
+                BSP_LEDToggle(BSP_LED_5_CHANNEL, BSP_LED_5_PORT);
+            }
+            else if (txrxLedStateCount>1)
+            {
+                BSP_LED_LightShowSet(BSP_LED_ALL_GOOD);
+			}
+            break; 
 
 		case    BSP_LED_DNS_FAILED:
 			BSP_LEDOn(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);

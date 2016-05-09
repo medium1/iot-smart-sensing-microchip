@@ -89,7 +89,7 @@ extern char validConfig;
 #define MQTT_DEFAULT_CMD_TIMEOUT_MS 10000
 #define MAX_BUFFER_SIZE 1024
 #define MAX_PACKET_ID 65536
-#define KEEP_ALIVE 900
+#define KEEP_ALIVE 60
 #define DEFAULT_PRESSURE_CLICK_INTERVAL 600
 #define DEFAULT_TEMPERATURE_CLICK_INTERVAL 600
 #define DEFAULT_HUMIDITY_CLICK_INTERVAL 600
@@ -111,6 +111,7 @@ unsigned char configuration[NVM_CONFIGURATION_SIZE];
 
 char txBuffer[MAX_BUFFER_SIZE];
 char rxBuffer[MAX_BUFFER_SIZE];
+int txrxLedStateCount=0;
 
 static int mPacketIdLast;
 static int mStopRead = 0;
@@ -806,7 +807,7 @@ int APP_Send_DeviceInfo ( void )
 {
     char publishPayload[512];
     char mac_address[20];
-    long mb_mem_used = 925; //TODO: Query used memory, currently hardcoded in KB with value reported from compiler
+    long mb_mem_used = 933; //TODO: Query used memory, currently hardcoded in KB with value reported from compiler
     char connected_sensor[32] = "none";
     char led1_status = (BSP_LEDStateGet(BSP_LED_1_CHANNEL, BSP_LED_1_PORT) == BSP_LED_STATE_ON);
     char led2_status = (BSP_LEDStateGet(BSP_LED_2_CHANNEL, BSP_LED_2_PORT) == BSP_LED_STATE_ON);
@@ -1251,8 +1252,13 @@ void APP_Tasks ( void )
                 
 				if (appData.lightShowVal != BSP_LED_ALL_GOOD)
 				{
-					appData.lightShowVal = BSP_LED_ALL_GOOD;
-					xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
+                    if (!((appData.lightShowVal==BSP_LED_TX || appData.lightShowVal==BSP_LED_RX) && 
+                          txrxLedStateCount<=1))
+                    {
+                        txrxLedStateCount = 0;
+                        appData.lightShowVal = BSP_LED_ALL_GOOD;
+                        xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
+                    }
 				}
                 
 				// Pressure_Click
