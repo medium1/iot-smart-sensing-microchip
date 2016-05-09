@@ -423,9 +423,22 @@ void BSP_LED_LightShow(BSP_LED_LIGHT_SHOW lightShow)
 			break;
 
 		case    BSP_LED_ALL_GOOD:
+            /*
 			BSP_LEDOff(BSP_LED_5_CHANNEL, BSP_LED_5_PORT);
 			BSP_LEDOff(BSP_LED_6_CHANNEL, BSP_LED_6_PORT);
 			ledTick = SYS_TMR_TickCountGet();
+             */
+            if (SYS_TMR_TickCountGet() - ledTick >= 625)
+			{
+				ledTick = SYS_TMR_TickCountGet();
+				BSP_LEDToggle(BSP_LED_7_CHANNEL, BSP_LED_7_PORT);
+				BSP_LEDOff(BSP_LED_6_CHANNEL, BSP_LED_6_PORT);
+                BSP_LEDOff(BSP_LED_5_CHANNEL, BSP_LED_5_PORT);
+				BSP_LEDOff(BSP_LED_1_CHANNEL, BSP_LED_1_PORT);
+				BSP_LEDOff(BSP_LED_2_CHANNEL, BSP_LED_2_PORT);
+				BSP_LEDOff(BSP_LED_3_CHANNEL, BSP_LED_3_PORT);
+				BSP_LEDOff(BSP_LED_4_CHANNEL, BSP_LED_4_PORT);
+			}
 			// Idle state
 			break;
 

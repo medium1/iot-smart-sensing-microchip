@@ -189,7 +189,7 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         lastFailure = true;
         if(httpDataBuff)
         {
-            memset(httpDataBuff, 0, 512);
+            memset(httpDataBuff, 0, 1024);
             strcpy((char*)httpDataBuff, "error.htm");
             TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
         }
@@ -322,7 +322,7 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     
     if(bConfigFailure == false)
     {
-        memset(httpDataBuff, 0, 512);
+        memset(httpDataBuff, 0, 1024);
         
         // All parsing complete!  Save new settings and force an interface restart
         // Set the interface to restart and display reconnecting information
@@ -338,7 +338,7 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
         lastFailure = true;
         if(httpDataBuff)
         {
-            memset(httpDataBuff, 0, 512);
+            memset(httpDataBuff, 0, 1024);
             strcpy((char*)httpDataBuff, "error.htm");
             TCPIP_HTTP_CurrentConnectionStatusSet(connHandle, HTTP_REDIRECT);
         }

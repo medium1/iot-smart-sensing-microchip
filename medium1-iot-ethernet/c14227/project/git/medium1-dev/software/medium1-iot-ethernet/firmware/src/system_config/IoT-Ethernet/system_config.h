@@ -407,7 +407,7 @@ extern "C" {
 #define TCPIP_HTTP_MAX_TLS_CONNECTIONS		  		0
 #define TCPIP_HTTP_DEFAULT_FILE		        		"index.htm"
 #define TCPIP_HTTPS_DEFAULT_FILE	        		"index.htm"
-#define TCPIP_HTTP_DEFAULT_LEN		        		10
+#define TCPIP_HTTP_DEFAULT_LEN		        		32
 #define TCPIP_HTTP_MAX_DATA_LEN		        		8192
 #define TCPIP_HTTP_MIN_CALLBACK_FREE				16
 #define TCPIP_HTTP_SKT_TX_BUFF_SIZE		    		0
