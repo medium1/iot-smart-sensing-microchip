@@ -95,7 +95,9 @@ HTTP_IO_RESULT TCPIP_HTTP_GetExecute(HTTP_CONN_HANDLE connHandle)
     SYS_FS_FileNameGet(TCPIP_HTTP_CurrentConnectionFileGet(connHandle), filename, sizeof(filename));
 
     httpDataBuff = TCPIP_HTTP_CurrentConnectionDataBufferGet(connHandle);
-
+    
+    memset(httpDataBuff, 0, 1024);
+    
     // Example of how to process a GET request call
     // If its the forms.htm page
 //    if(!memcmp(filename, "forms.htm", 9))
