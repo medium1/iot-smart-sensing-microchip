@@ -160,7 +160,7 @@ function joinNetwork() {
 	// copy elements from hidden form and submit them through
 	// the normal form
 	
-	var project_mqtt_id = document.getElementById('_project_mqtt_id').value;
+	var project_mqtt_id = document.getElementById('m').value;
 	if (project_mqtt_id.length <= 0)
 	{
 		alert('Please enter a valid project_mqtt_id.');
@@ -168,7 +168,7 @@ function joinNetwork() {
 	}
 	document.getElementById("project_mqtt_id").value = project_mqtt_id;
 
-	var user_mqtt_id = document.getElementById('_user_mqtt_id').value;
+	var user_mqtt_id = document.getElementById('u').value;
 	if (user_mqtt_id.length <= 0)
 	{
 		alert('Please enter a valid user_mqtt_id.');
@@ -176,7 +176,7 @@ function joinNetwork() {
 	}
 	document.getElementById("user_mqtt_id").value = user_mqtt_id;
 
-	var api_key = document.getElementById('_api_key').value;
+	var api_key = document.getElementById('a').value;
 	if (api_key.length <= 0)
 	{
 		alert('Please enter a valid api_key.');
@@ -184,7 +184,7 @@ function joinNetwork() {
 	}
 	document.getElementById("api_key").value = api_key;
 
-	var api_password = document.getElementById('_api_password').value;
+	var api_password = document.getElementById('p').value;
 	if (api_password.length <= 0)
 	{
 		alert('Please enter a valid api_password.');
@@ -192,7 +192,7 @@ function joinNetwork() {
 	}
 	document.getElementById("api_password").value = api_password;
 
-	var device_name = document.getElementById('_device_name').value;
+	var device_name = document.getElementById('d').value;
 	if (device_name.length <= 0)
 	{
 		alert('Please enter a valid device_name.');
@@ -200,7 +200,7 @@ function joinNetwork() {
 	}
 	document.getElementById("device_name").value = device_name;
 
-	var sensor_type = document.getElementById('_sensor_type').value;
+	var sensor_type = document.getElementById('s').value;
 	if (sensor_type.length <= 0)
 	{
 		alert('Please select a valid sensor_type.');
@@ -208,7 +208,7 @@ function joinNetwork() {
 	}
 	document.getElementById("sensor_type").value = sensor_type;
 
-	window.location.hash = '_project_mqtt_id=' + project_mqtt_id + '&_user_mqtt_id=' + user_mqtt_id + '&_api_key=' + api_key + '&_api_password=' + api_password + '&_device_name=' + device_name + '&_sensor_type=' + sensor_type;
+	window.location.hash = 'm=' + project_mqtt_id + '&u=' + user_mqtt_id + '&a=' + api_key + '&p=' + api_password + '&d=' + device_name + '&s=' + sensor_type;
 
 	document.kickoff.submit();
 }
