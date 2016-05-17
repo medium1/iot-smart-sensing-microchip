@@ -52,7 +52,6 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // Section: Included Files 
 // *****************************************************************************
 // *****************************************************************************
-
 #include "app.h"
 #include "app1.h"
 #include "parson.h"
@@ -65,47 +64,13 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // Section: Global Data Definitions
 // *****************************************************************************
 // *****************************************************************************
-
-// *****************************************************************************
-/* Application Data
-
-  Summary:
-	 Holds application data
-
-  Description:
-	 This structure holds the application's data.
-
-  Remarks:
-	 This structure should be initialized by the APP_Initialize function.
-	 
-	 Application strings and buffers are be defined outside this structure.
-*/
-
-APP_DATA appData;
-extern APP1_DATA app1Data;
-char topic_mqtt_event[256];
 extern char validConfig;
-#define APP_CONFIGURATION_SIGNATURE "Saritasa - ECM Develop Kit configuration"
-#define MQTT_DEFAULT_CMD_TIMEOUT_MS 10000
-#define MAX_BUFFER_SIZE 1024
-#define MAX_PACKET_ID 65536
-#define KEEP_ALIVE 60
-#define DEFAULT_PRESSURE_CLICK_INTERVAL 600
-#define DEFAULT_TEMPERATURE_CLICK_INTERVAL 600
-#define DEFAULT_HUMIDITY_CLICK_INTERVAL 600
-#define DEFAULT_AIR_QUALITY_CLICK_INTERVAL 600
-#define DEFAULT_MOTION_CLICK_INTERVAL 60
-#define SEND_DEVICE_INFO_INTERVAL 600
-#define MOTION_DURATION 60
-#define AIR_DURATION 600
-#define HUMD_DURATION 600
-#define TEMP_DURATION 600
-#define TENMINUTES_DURATION 600
-#define SAMPLE_DURATION 5
-#define PRESSURE_DURATION 600
-#define POT_MARGIN 3
-#define IOT_ETHERNET 1
+extern char readBuff[SYS_CMD_READ_BUFFER_SIZE] SYS_CMD_BUFFER_DMA_READY;
+extern BSP_DATA bspData;
+APP_DATA appData;
+APP1_DATA app1Data;
 
+unsigned char topic_mqtt_event[256];
 unsigned char configurationSignature[256];
 unsigned char configuration[NVM_CONFIGURATION_SIZE];
 
@@ -113,47 +78,17 @@ char txBuffer[MAX_BUFFER_SIZE];
 char rxBuffer[MAX_BUFFER_SIZE];
 int txrxLedStateCount=0;
 
+struct switchMessage mySwitchMessage;
+double ppm;												// ppm
+unsigned int adc_rd;
+
 static int mPacketIdLast;
 static int mStopRead = 0;
 static char clickid=0;
 static char display_message=0;
-
-extern char readBuff[SYS_CMD_READ_BUFFER_SIZE] SYS_CMD_BUFFER_DMA_READY;
-extern size_t ReadCommandCharacter(const void* cmdIoParam);
-
 static char motion_detected = 1;	//Detect & read from motion_click sensor
-static bool  HumChanged,PotChanged,PressureChanged,AirChanged,MotionChanged,Button1Changed,Button2Changed,Button3Changed,Button4Changed; 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Global Data Definitions
-// *****************************************************************************
-// *****************************************************************************
-struct switchMessage mySwitchMessage;
-#define APP_LOW_VOLTAGE 630
-#define APP_GOOD_VOLTAGE 650
+static bool HumChanged,PotChanged,PressureChanged,AirChanged,MotionChanged,Button1Changed,Button2Changed,Button3Changed,Button4Changed; 
 
-double ppm;												// ppm
-unsigned int adc_rd;
-// *****************************************************************************
-/* Application Data
-
-  Summary:
-	 Holds application data
-
-  Description:
-	 This structure holds the application's data.
-
-  Remarks:
-	 This structure should be initialized by the APP_Initialize function.
-	 
-	 Application strings and buffers are be defined outside this structure.
-*/
-
-APP1_DATA app1Data;
-extern APP_DATA appData;
-extern BSP_DATA bspData;
-
-void APP_Save_SensorConfiguration ( void );
 
 // *****************************************************************************
 // *****************************************************************************
@@ -164,7 +99,6 @@ void APP_Save_SensorConfiguration ( void );
 // WolfMQTT Callbacks for network connectivity
 int APP_tcpipConnect_cb(void *context, const char* host, word16 port, int timeout_ms)
 {
-
 	uint32_t timeout = 0;
 	timeout = SYS_TMR_TickCountGet();
 	SYS_CONSOLE_PRINT("App:  DNS:   Resolving host '%s'\r\n", &appData.host);
@@ -228,6 +162,7 @@ int APP_tcpipConnect_cb(void *context, const char* host, word16 port, int timeou
 			return APP_CODE_ERROR_CMD_TIMEOUT;
 		}
 	}
+    
 	while (NET_PRES_SKT_IsNegotiatingEncryption(appData.socket))
 	{
 		if (APP_TIMER_Expired_ms(&timeout, timeout_ms))
@@ -242,6 +177,7 @@ int APP_tcpipConnect_cb(void *context, const char* host, word16 port, int timeou
 		NET_PRES_SocketClose(appData.socket);
 		return APP_CODE_ERROR_FAILED_SSL_NEGOTIATION;
 	}
+    
 	uint32_t timeSocketafter = SYS_TMR_TickCountGet();
 	SYS_CONSOLE_MESSAGE("App:  TCPIP:  Secure socket opened\r\n");
 	SYS_CONSOLE_PRINT("Socket Time Tick Before: %d, Tick After: %d, Tick Diff: %d\r\n", timeSocketbefore, timeSocketafter, timeSocketafter-timeSocketbefore);
@@ -454,9 +390,9 @@ void process_sensor_config_update_command(JSON_Object* tObject)
     }
         
     APP_Save_SensorConfiguration();
-    // TODO: Update processing when sensors configuration change if needed
 }
 
+// This callback is executed when received an mqtt message
 int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, byte msg_done)
 {
     appData.lightShowVal = BSP_LED_RX;
@@ -468,30 +404,10 @@ int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, by
 	payload[msg->total_len] = '\0';
 	SYS_CONSOLE_PRINT("\r\nApp:  MQTT.Message Received: %s -- Topic %s\r\n\r\n", payload, msg->topic_name);
 
-	/*
-	// Temporary fix JSON parse error by remove u' prefix. This may not safe with some certain payload data.
-	int i=1;
-	for (; i<msg->total_len; i++)
-	{
-		 if ((payload[i-1]=='{'||payload[i-1]=='['||payload[i-1]==' '||payload[i-1]=='\t') &&
-			  payload[i]=='u' &&
-			  (payload[i+1] == '\'' || payload[i+1] == '\"'))
-		 {
-			  payload[i] = ' ';
-		 }
-		 
-		 if (payload[i]=='\'')
-		 {
-			  payload[i] = '\"';
-		 }
-	}
-	*/ 
-
-	appData.lightShowVal = BSP_LED_RX;
-	xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);
-
-	// If the topic matches our MediumOne IoT delta topic
-	//if (!strncmp(topic_mqtt_event, msg->topic_name, msg->topic_name_len))
+#ifdef USE_VERIFY_EVENT_TOPIC_NAME
+    // If the topic matches our MediumOne IoT delta topic
+	if (!strncmp(topic_mqtt_event, msg->topic_name, msg->topic_name_len))
+#endif
 	{
 		JSON_Value *root_value = json_parse_string(payload);
 		if (json_value_get_type(root_value) != JSONObject)
@@ -522,7 +438,6 @@ int mqttclient_message_cb(MqttClient *client, MqttMessage *msg, byte msg_new, by
 // Section: Application Local Functions
 // *****************************************************************************
 // *****************************************************************************
-
 
 bool APP_TIMER_Expired(uint32_t * timer, uint32_t seconds)
 {
@@ -597,7 +512,6 @@ void APP_UpdateMQTTLoginInfo()
 	sprintf(appData.publish_topic_name, "0/%s/%s//", appData.project_mqtt_id, appData.user_mqtt_id);
 	sprintf(appData.subscribe_topic_name, "1/%s/%s/#", appData.project_mqtt_id, appData.user_mqtt_id);
 	sprintf(topic_mqtt_event, "1/%s/%s//event", appData.project_mqtt_id, appData.user_mqtt_id);
-	//sprintf(appData.subscribe_topic_name, "2/%s/group0/time/#", appData.project_mqtt_id);
 }
 
 _Bool APP_LoadConfiguration ( void )
@@ -629,8 +543,6 @@ _Bool APP_LoadConfiguration ( void )
     SYS_CONSOLE_PRINT("App:  Read configuration - user_mqtt_id '%s'\r\n", appData.user_mqtt_id);
     SYS_CONSOLE_PRINT("App:  Read configuration - api_key '%s'\r\n", "********");
     SYS_CONSOLE_PRINT("App:  Read configuration - api_password '%s'\r\n", "********");
-    //SYS_CONSOLE_PRINT("App:  Read configuration - api_key '%s'\r\n", appData.api_key);
-    //SYS_CONSOLE_PRINT("App:  Read configuration - api_password '%s'\r\n", appData.api_password);
     SYS_CONSOLE_PRINT("App:  Read configuration - device_name '%s'\r\n", appData.device_name);
     SYS_CONSOLE_PRINT("App:  Read configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
     SYS_CONSOLE_PRINT("App:  Read configuration - Configuration signature '%s'\r\n", configurationSignature);
@@ -660,8 +572,7 @@ _Bool APP_LoadConfiguration ( void )
         SYS_CONSOLE_PRINT("App:  Found configuration - api_key '%s'\r\n", "********");
         SYS_CONSOLE_PRINT("App:  Found configuration - api_password '%s'\r\n", "********");
         SYS_CONSOLE_PRINT("App:  Found configuration - device_name '%s'\r\n", appData.device_name);
-        SYS_CONSOLE_PRINT("App:  Found configuration - sensor_type '%d'\r\n", appData.app_sensor_type);
-        
+        SYS_CONSOLE_PRINT("App:  Found configuration - sensor_type '%d'\r\n", appData.app_sensor_type);        
         SYS_CONSOLE_PRINT("App:  Found configuration - sensor profiles:\r\n");
         SYS_CONSOLE_PRINT("\t- pressure_click_config(threshold_pct: %f, period_sec: %d)\r\n", 
                 appData.pressure_click_config.threshold_pct, appData.pressure_click_config.period_sec);
@@ -715,8 +626,6 @@ void APP_SaveConfiguration ( void )
     SYS_CONSOLE_PRINT("App:  Configured user_mqtt_id - '%s'\r\n", appData.user_mqtt_id);
     SYS_CONSOLE_PRINT("App:  Configured api_key - '%s'\r\n", "********");
     SYS_CONSOLE_PRINT("App:  Configured api_password - '%s'\r\n", "********");
-    //SYS_CONSOLE_PRINT("App:  Configured api_key - '%s'\r\n", appData.api_key);
-    //SYS_CONSOLE_PRINT("App:  Configured api_password - '%s'\r\n", appData.api_password);
     SYS_CONSOLE_PRINT("App:  Configured device_name - '%s'\r\n", appData.device_name);
     SYS_CONSOLE_PRINT("App:  Configured sensor_type - '%d'\r\n", appData.app_sensor_type);
     
@@ -803,6 +712,7 @@ int APP_Send_IPDetectionCommand ( void )
     char publishPayload[512] = "{\"event_data\":{'detect_ip':true}, \"add_client_ip\": true}";
     return APP_Send_MQTTMessage(publishPayload);
 }
+
 int APP_Send_DeviceInfo ( void )
 {
     char publishPayload[512];
@@ -855,7 +765,6 @@ int APP_Send_DeviceInfo ( void )
   Remarks:
 	 See prototype in app.h.
  */
-
 void APP_Initialize ( void )
 {
     /* Place the App state machine in its initial state. */
@@ -907,7 +816,6 @@ void APP_Initialize ( void )
   Remarks:
 	 See prototype in app.h.
  */
-
 void APP_Tasks ( void )
 {
 	static int validConfig = 0;
@@ -1070,18 +978,6 @@ void APP_Tasks ( void )
 				}
 				else
 				{
-					/*
-                    if (validConfig == 0)
-					{
-						SYS_CONSOLE_MESSAGE("App:  Received configuration from webpage, writing to NVM...\r\n");
-						APP_SaveConfiguration();
-                        
-                        // Restart board
-                        //SYS_RESET_SoftwareReset();
-                        break;
-					}
-                    */ 
-
 					appData.lightShowVal = BSP_LED_ALL_GOOD;
 					xQueueSendToFront(app1Data.lightShowQueue, &appData.lightShowVal, 1);  
 					TCPIP_NET_HANDLE    netH;
@@ -1250,6 +1146,7 @@ void APP_Tasks ( void )
 				int rc;
 				char publishPayload[512]="";
                 
+                // Update heart beat led state
 				if (appData.lightShowVal != BSP_LED_ALL_GOOD)
 				{
                     if (!((appData.lightShowVal==BSP_LED_TX || appData.lightShowVal==BSP_LED_RX) && 
@@ -1491,7 +1388,8 @@ void APP_Tasks ( void )
 				break;
 			}
 	}
-	switch (display_message)
+	
+    switch (display_message)
 	{
 		case 1:
 			SYS_CONSOLE_PRINT("App: app1Data.potValue=%d\r\n", app1Data.potValue);
@@ -1520,7 +1418,6 @@ void APP_Tasks ( void )
   Remarks:
 	 See prototype in app1.h.
  */
-
 void APP1_Tasks ( void )
 {
 	/* Check the application's current state. */
@@ -1531,13 +1428,8 @@ void APP1_Tasks ( void )
 			{
 				bool appInitialized = true;
 
-
 				if (appInitialized)
 				{
-					// Open the ADC drivers
-					//DRV_ADC0_Open();
-					//DRV_ADC_DigitalFilter0_Open();
-					//DRV_ADC_Start();
 					app1Data.state = APP1_STATE_SERVICE_TASKS;
 				}
 				APP_TIMER_Set(&appData.airTimer);

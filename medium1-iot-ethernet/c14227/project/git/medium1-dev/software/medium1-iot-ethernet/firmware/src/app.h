@@ -75,52 +75,69 @@ extern "C" {
 // Section: Type Definitions
 // *****************************************************************************
 // *****************************************************************************
-//#define MediumOne_IOT_PORT 8883 // M1 Comment
 #define MediumOne_IOT_PORT 61620
+#define APP_CONFIGURATION_SIGNATURE "Saritasa - ECM Develop Kit configuration"
+#define MQTT_DEFAULT_CMD_TIMEOUT_MS 10000
+#define MAX_BUFFER_SIZE 1024
+#define MAX_PACKET_ID 65536
+#define KEEP_ALIVE 60
+#define DEFAULT_PRESSURE_CLICK_INTERVAL 600
+#define DEFAULT_TEMPERATURE_CLICK_INTERVAL 600
+#define DEFAULT_HUMIDITY_CLICK_INTERVAL 600
+#define DEFAULT_AIR_QUALITY_CLICK_INTERVAL 600
+#define DEFAULT_MOTION_CLICK_INTERVAL 60
+#define SEND_DEVICE_INFO_INTERVAL 600
+#define MOTION_DURATION 60
+#define AIR_DURATION 600
+#define HUMD_DURATION 600
+#define TEMP_DURATION 600
+#define TENMINUTES_DURATION 600
+#define SAMPLE_DURATION 5
+#define PRESSURE_DURATION 600
+#define POT_MARGIN 3
+#define IOT_ETHERNET 1    
+#define APP_LOW_VOLTAGE 630
+#define APP_GOOD_VOLTAGE 650
 
-//#define NVM_CLIENT_CERTIFICATE_SPACE    (32 * 1024)
-//#define NVM_CLIENT_KEY_SPACE            (16 * 1024)
-
+    
+    
 #define NVM_CONFIGURATION_SPACE (48 * 1024)
-    
-#define NVM_HOST_ADDRESS_OFFSET             (0 * 256)
-#define NVM_PROJECT_MQTT_ID_OFFSET          (1 * 256)
-#define NVM_USER_MQTT_ID_OFFSET             (2 * 256)
-#define NVM_API_KEY_OFFSET                  (3 * 256)
-#define NVM_API_PASSWORD_OFFSET             (4 * 256)
-#define NVM_DEVICE_NAME_OFFSET              (5 * 256)
-#define NVM_SENSOR_TYPE_OFFSET              (6 * 256)
-#define NVM_CONFIGURATION_SIGNATURE_OFFSET  (7 * 256)
-    
-#define NVM_CONFIGURATION_SIZE              (8*256)
+    #define NVM_HOST_ADDRESS_OFFSET             (0 * 256)
+    #define NVM_PROJECT_MQTT_ID_OFFSET          (1 * 256)
+    #define NVM_USER_MQTT_ID_OFFSET             (2 * 256)
+    #define NVM_API_KEY_OFFSET                  (3 * 256)
+    #define NVM_API_PASSWORD_OFFSET             (4 * 256)
+    #define NVM_DEVICE_NAME_OFFSET              (5 * 256)
+    #define NVM_SENSOR_TYPE_OFFSET              (6 * 256)
+    #define NVM_CONFIGURATION_SIGNATURE_OFFSET  (7 * 256)
+#define NVM_CONFIGURATION_SIZE                  (8 * 256)
     
 
-    
 #define NVM_SENSORS_CONFIGURATION_SPACE (64 * 1024)
-
-#define NVM_SENSOR_CONFIG_PRESSURE_CLICK_OFFSET     (0 * sizeof(APP_SENSOR_CONFIG))
-#define NVM_SENSOR_CONFIG_TEMPERATURE_CLICK_OFFSET  (1 * sizeof(APP_SENSOR_CONFIG))
-#define NVM_SENSOR_CONFIG_HUMIDITY_CLICK_OFFSET     (2 * sizeof(APP_SENSOR_CONFIG))
-#define NVM_SENSOR_CONFIG_MOTION_CLICK_OFFSET       (3 * sizeof(APP_SENSOR_CONFIG))
-#define NVM_SENSOR_CONFIG_AIR_QUALITY_OFFSET        (4 * sizeof(APP_SENSOR_CONFIG))
-
+    #define NVM_SENSOR_CONFIG_PRESSURE_CLICK_OFFSET     (0 * sizeof(APP_SENSOR_CONFIG))
+    #define NVM_SENSOR_CONFIG_TEMPERATURE_CLICK_OFFSET  (1 * sizeof(APP_SENSOR_CONFIG))
+    #define NVM_SENSOR_CONFIG_HUMIDITY_CLICK_OFFSET     (2 * sizeof(APP_SENSOR_CONFIG))
+    #define NVM_SENSOR_CONFIG_MOTION_CLICK_OFFSET       (3 * sizeof(APP_SENSOR_CONFIG))
+    #define NVM_SENSOR_CONFIG_AIR_QUALITY_OFFSET        (4 * sizeof(APP_SENSOR_CONFIG))
 #define NVM_SENSORS_CONFIGURATION_SIZE              (5 * sizeof(APP_SENSOR_CONFIG))
 
     
 /* Application Codes */
-	enum AppCodes
-	{
-		APP_CODE_SUCCESS = 0,
-		APP_CODE_ERROR_BAD_ARG = -1,
-		APP_CODE_ERROR_OUT_OF_BUFFER = -2,
-		APP_CODE_ERROR_SSL_FATAL = -3,
-		APP_CODE_ERROR_INVALID_SOCKET = -4,
-		APP_CODE_ERROR_FAILED_TO_BEGIN_DNS_RESOLUTION = -5,
-		APP_CODE_ERROR_DNS_FAILED = -6,
-		APP_CODE_ERROR_FAILED_SSL_NEGOTIATION = -7,
-		APP_CODE_ERROR_TIMEOUT = -8,
-		APP_CODE_ERROR_CMD_TIMEOUT = -9,
-	};
+enum AppCodes
+{
+    APP_CODE_SUCCESS = 0,
+    APP_CODE_ERROR_BAD_ARG = -1,
+    APP_CODE_ERROR_OUT_OF_BUFFER = -2,
+    APP_CODE_ERROR_SSL_FATAL = -3,
+    APP_CODE_ERROR_INVALID_SOCKET = -4,
+    APP_CODE_ERROR_FAILED_TO_BEGIN_DNS_RESOLUTION = -5,
+    APP_CODE_ERROR_DNS_FAILED = -6,
+    APP_CODE_ERROR_FAILED_SSL_NEGOTIATION = -7,
+    APP_CODE_ERROR_TIMEOUT = -8,
+    APP_CODE_ERROR_CMD_TIMEOUT = -9,
+};
+
+
 // *****************************************************************************
 /* Application states
 
@@ -132,34 +149,33 @@ extern "C" {
 	 determine the behavior of the application at various times.
 */
 
-	typedef enum
-	{
-		/* Application's state machine's initial state. */
-		APP_STATE_INIT=0,
-		APP_NVM_MOUNT_DISK,
-		APP_NVM_ERASE_CONFIGURATION,
-		APP_NVM_LOAD_CONFIGURATION,
-		APP_TCPIP_WAIT_INIT,
-		APP_TCPIP_WAIT_FOR_IP,
-		APP_TCPIP_WAIT_CONFIGURATION,
-		APP_TCPIP_MQTT_INIT,
-		APP_TCPIP_MQTT_NET_CONNECT,
-		APP_TCPIP_MQTT_PROTOCOL_CONNECT,
-		APP_TCPIP_MQTT_SUBSCRIBE,
-		APP_TCPIP_MQTT_LOOP,
-		APP_TCPIP_ERROR,
+typedef enum
+{
+    /* Application's state machine's initial state. */
+    APP_STATE_INIT=0,
+    APP_NVM_MOUNT_DISK,
+    APP_NVM_ERASE_CONFIGURATION,
+    APP_NVM_LOAD_CONFIGURATION,
+    APP_TCPIP_WAIT_INIT,
+    APP_TCPIP_WAIT_FOR_IP,
+    APP_TCPIP_WAIT_CONFIGURATION,
+    APP_TCPIP_MQTT_INIT,
+    APP_TCPIP_MQTT_NET_CONNECT,
+    APP_TCPIP_MQTT_PROTOCOL_CONNECT,
+    APP_TCPIP_MQTT_SUBSCRIBE,
+    APP_TCPIP_MQTT_LOOP,
+    APP_TCPIP_ERROR,
+} APP_STATES;
 
-	} APP_STATES;
 
-
-	typedef enum
-	{
-		APP_SENSOR_TYPE_NONE,
-		APP_SENSOR_TYPE_PRESSURE_CLICK,
-		APP_SENSOR_TYPE_AIR_QUALITY_CLICK,
-		APP_SENSOR_TYPE_HUMIDITY_CLICK,
-		APP_SENSOR_TYPE_MOTION_CLICK
-	} APP_SENSOR_TYPE;
+typedef enum
+{
+    APP_SENSOR_TYPE_NONE,
+    APP_SENSOR_TYPE_PRESSURE_CLICK,
+    APP_SENSOR_TYPE_AIR_QUALITY_CLICK,
+    APP_SENSOR_TYPE_HUMIDITY_CLICK,
+    APP_SENSOR_TYPE_MOTION_CLICK
+} APP_SENSOR_TYPE;
 
 
 typedef struct
@@ -167,6 +183,7 @@ typedef struct
     double          threshold_pct;
     int             period_sec;
 } APP_SENSOR_CONFIG;
+
 
 // *****************************************************************************
 /* Application Data
@@ -178,105 +195,101 @@ typedef struct
 	 This structure holds the application's data.
 
   Remarks:
+	 This structure should be initialized by the APP_Initialize function.
+	 
 	 Application strings and buffers are be defined outside this structure.
- */
+*/
 
-	typedef struct
-	{
-		/* The application's current state */
-		APP_STATES state;
+typedef struct
+{
+    /* The application's current state */
+    APP_STATES state;
 
-		// Last twelve characters of MAC address
-		unsigned char uuid[12 + 1];
+    // Last twelve characters of MAC address
+    unsigned char uuid[12 + 1];
 
-		// Client certificate location
-    //__attribute__ ((aligned(4))) unsigned char clientCert[2048];
-    
-		// Client key location
-    //__attribute__ ((aligned(4))) unsigned char clientKey[2048];
-    
-		// Network handles
-		NET_PRES_SKT_HANDLE_T socket;
-		TCP_PORT port;
-		NET_PRES_SKT_ERROR_T error;
-		void* ctx;
-		void* ssl;
+    // Network handles
+    NET_PRES_SKT_HANDLE_T socket;
+    TCP_PORT port;
+    NET_PRES_SKT_ERROR_T error;
+    void* ctx;
+    void* ssl;
 
-		// The MediumOne endpoint to access the MediumOne IoT Service
-		unsigned char host[256];
-		unsigned char project_mqtt_id[256];
-		unsigned char user_mqtt_id[256];
-		unsigned char api_key[256];
-		unsigned char api_password[256];
-		unsigned char device_name[256];
-		APP_SENSOR_TYPE app_sensor_type;
+    // The MediumOne endpoint to access the MediumOne IoT Service
+    unsigned char host[256];
+    unsigned char project_mqtt_id[256];
+    unsigned char user_mqtt_id[256];
+    unsigned char api_key[256];
+    unsigned char api_password[256];
+    unsigned char device_name[256];
+    APP_SENSOR_TYPE app_sensor_type;
 
-		unsigned char username[256];
-		unsigned char password[256];
-		unsigned char publish_topic_name[256];
-		unsigned char subscribe_topic_name[256];
+    unsigned char username[256];
+    unsigned char password[256];
+    unsigned char publish_topic_name[256];
+    unsigned char subscribe_topic_name[256];
 
-		// The MediumOne endpoint IP address location
-		IP_MULTI_ADDRESS  host_ipv4;
+    // The MediumOne endpoint IP address location
+    IP_MULTI_ADDRESS  host_ipv4;
 
-		TCPIP_MAC_ADDR          macAddress;
-		unsigned char local_ip[16];
-        unsigned char remote_ip[16];
+    TCPIP_MAC_ADDR macAddress;
+    unsigned char  local_ip[16];
+    unsigned char  remote_ip[16];
 
-		// NVM Driver
-		DRV_HANDLE nvmHandle;
-		DRV_NVM_COMMAND_HANDLE      nvmCommandHandle;
-		SYS_FS_MEDIA_GEOMETRY       *gAppNVMMediaGeometry;
-		DRV_NVM_COMMAND_STATUS      nvmStatus;
+    // NVM Driver
+    DRV_HANDLE                  nvmHandle;
+    DRV_NVM_COMMAND_HANDLE      nvmCommandHandle;
+    SYS_FS_MEDIA_GEOMETRY       *gAppNVMMediaGeometry;
+    DRV_NVM_COMMAND_STATUS      nvmStatus;
 
-		// Timers
-		uint32_t genericUseTimer;
-		uint32_t tenminutesTimer;
-		uint32_t sampleTimer;
-		uint32_t airTimer;
-		uint32_t humdTimer;
-		uint32_t pressureTimer;
-		uint32_t tempTimer;
-		uint32_t motionTimer;
-		uint32_t timerTCPIP;
-		uint32_t mqttKeepAlive;
-		uint32_t mqttSendDeviceInfo;
-		uint32_t mqttSendPressureClick;
-    	uint32_t mqttSendHumidityClick;
-    	uint32_t mqttSendAirQualityClick;
-    	uint32_t mqttSendMotionClick;
+    // Timers
+    uint32_t genericUseTimer;
+    uint32_t tenminutesTimer;
+    uint32_t sampleTimer;
+    uint32_t airTimer;
+    uint32_t humdTimer;
+    uint32_t pressureTimer;
+    uint32_t tempTimer;
+    uint32_t motionTimer;
+    uint32_t timerTCPIP;
+    uint32_t mqttKeepAlive;
+    uint32_t mqttSendDeviceInfo;
+    uint32_t mqttSendPressureClick;
+    uint32_t mqttSendHumidityClick;
+    uint32_t mqttSendAirQualityClick;
+    uint32_t mqttSendMotionClick;
 
-		// Mqtt Client
-		MqttNet myNet;
-		MqttClient myClient;
+    // Mqtt Client
+    MqttNet myNet;
+    MqttClient myClient;
 
-		// Value for light show
-		uint32_t lightShowVal;
+    // Value for light show
+    uint32_t lightShowVal;
 
-		// LED Values
-		bool led1;
-		bool led2;
-		bool led3;
-		bool led4;
+    // LED Values
+    bool led1;
+    bool led2;
+    bool led3;
+    bool led4;
 
-		bool led1val;
-		bool led2val;
-		bool led3val;
-		bool led4val;
+    bool led1val;
+    bool led2val;
+    bool led3val;
+    bool led4val;
 
-        //Sensors configuration
-        APP_SENSOR_CONFIG pressure_click_config;
-        APP_SENSOR_CONFIG temperature_click_config;
-        APP_SENSOR_CONFIG humidity_click_config;
-        APP_SENSOR_CONFIG motion_click_config;
-        APP_SENSOR_CONFIG air_quality_click_config;
+    //Sensors configuration
+    APP_SENSOR_CONFIG pressure_click_config;
+    APP_SENSOR_CONFIG temperature_click_config;
+    APP_SENSOR_CONFIG humidity_click_config;
+    APP_SENSOR_CONFIG motion_click_config;
+    APP_SENSOR_CONFIG air_quality_click_config;
 
-        //Sensors values
-        double last_pressure_value;
-        double last_temperature_value;
-        double last_humidity_value;
-        double last_air_quality_value;
-	} APP_DATA;
+    //Sensors values
+    double last_pressure_value;
+    double last_temperature_value;
+    double last_humidity_value;
+    double last_air_quality_value;
+} APP_DATA;
 
 
 // *****************************************************************************
@@ -323,8 +336,7 @@ typedef struct
   Remarks:
 	 This routine must be called from the SYS_Initialize function.
 */
-
-	void APP_Initialize ( void );
+void APP_Initialize ( void );
 
 
 /*******************************************************************************
@@ -356,38 +368,38 @@ typedef struct
   Remarks:
 	 This routine must be called from SYS_Tasks() routine.
  */
-
-	void APP_Tasks( void );
-
-	bool APP_TIMER_Expired(uint32_t * timer, uint32_t seconds);
-	bool APP_TIMER_Expired_ms(uint32_t * timer, uint32_t mseconds);
-	bool APP_TIMER_Set(uint32_t * timer);
-
-	void pressure_temp_read(void);
+void APP_Tasks( void );
+void APP_Save_SensorConfiguration ( void );
+bool APP_TIMER_Expired(uint32_t * timer, uint32_t seconds);
+bool APP_TIMER_Expired_ms(uint32_t * timer, uint32_t mseconds);
+bool APP_TIMER_Set(uint32_t * timer);
+void pressure_temp_read(void);
 
 #define HTS221_ADDRESS           0xBE // Address of HTS221 Humidity sensor, actual address on I2C 0x5F
 #define HTS221_WHO_AM_I          0xF // should be 0xBC
-	void InitI2C1(void);
-	bool ReadI2C1(unsigned short reg);
-	bool writeI2C1reg(unsigned short reg,unsigned short val);
-	bool waitForI2C1(void);
-	bool ReadI2C2(unsigned short reg, unsigned short bytecnt);
-	uint8_t ReadI2C0(unsigned short reg);
 
-	int I2C1_val1,I2C1_val2;
-	long int pressure_value;										// Declaration of pressure variable in mbar
-	float temperature_value;										// Declaration of temperature variable
-	unsigned char chip_id_address;
-	float Temperature;
-	float Humidity;
-	char tmp_data[16];
+void InitI2C1(void);
+bool ReadI2C1(unsigned short reg);
+bool writeI2C1reg(unsigned short reg,unsigned short val);
+bool waitForI2C1(void);
+bool ReadI2C2(unsigned short reg, unsigned short bytecnt);
+uint8_t ReadI2C0(unsigned short reg);
+
+int I2C1_val1,I2C1_val2;
+long int pressure_value;										// Declaration of pressure variable in mbar
+float temperature_value;										// Declaration of temperature variable
+unsigned char chip_id_address;
+float Temperature;
+float Humidity;
+char tmp_data[16];
 // Device addresses
-	float HTS221_humidity, HTS221_temperature;
-	int16_t readTempData(void);
-	int16_t readHumidityData(void);
-	void humidity_temperature_read(void);
-	int16_t temperatureCount;
-	int16_t humidityCount;  // variables to hold raw HTS221 temperature and humidity values
+float HTS221_humidity, HTS221_temperature;
+int16_t readTempData(void);
+int16_t readHumidityData(void);
+void humidity_temperature_read(void);
+int16_t temperatureCount;
+int16_t humidityCount;  // variables to hold raw HTS221 temperature and humidity values
+
 #endif /* _APP_H */
 
 //DOM-IGNORE-BEGIN
@@ -395,7 +407,6 @@ typedef struct
 }
 #endif
 //DOM-IGNORE-END
-
 /*******************************************************************************
  End of File
  */

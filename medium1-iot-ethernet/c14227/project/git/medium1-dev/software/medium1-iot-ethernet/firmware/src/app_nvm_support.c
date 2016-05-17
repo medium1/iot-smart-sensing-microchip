@@ -41,7 +41,6 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "app_nvm_support.h"
 
-
 extern APP_DATA appData;
 
 bool APP_NVM_Erase(uint32_t nvm_dest_address)

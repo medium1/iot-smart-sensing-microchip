@@ -149,9 +149,6 @@ HTTP_IO_RESULT TCPIP_HTTP_PostExecute(HTTP_CONN_HANDLE connHandle)
     temporary location in RAM, then eventually saves the data to EEPROM or
     external Flash.
 
-    When complete, this function redirects to reconnect.htm, which will
-    display information on the board connecting to the amazon server.
-
     If an error occurs, error.htm will be seen.
 
   Precondition:
@@ -294,8 +291,6 @@ static HTTP_IO_RESULT HTTPPostConfig(HTTP_CONN_HANDLE connHandle)
     SYS_CONSOLE_PRINT("Web submit configuration - user_mqtt_id '%s'\r\n", user_mqtt_id);
     SYS_CONSOLE_PRINT("Web submit configuration - api_key '%s'\r\n", "********");
     SYS_CONSOLE_PRINT("Web submit configuration - api_password '%s'\r\n", "********");
-    //SYS_CONSOLE_PRINT("Web submit configuration - api_key '%s'\r\n", api_key);
-    //SYS_CONSOLE_PRINT("Web submit configuration - api_password '%s'\r\n", api_password);
     SYS_CONSOLE_PRINT("Web submit configuration - device_name '%s'\r\n", device_name);
     SYS_CONSOLE_PRINT("Web submit configuration - sensor_type '%d'\r\n", app_sensor_type);
         
