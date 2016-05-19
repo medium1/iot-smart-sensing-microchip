@@ -1044,10 +1044,10 @@ void APP_Tasks ( void )
 				connect.password = appData.password;
 				connect.keep_alive_sec = KEEP_ALIVE;
 				connect.clean_session = 1;
-				char clientIdString[13];
-				sprintf(clientIdString, appData.uuid, "%02x%02x%02x%02x%02x%02x\0", 
+				char clientIdString[280];
+				sprintf(clientIdString, appData.uuid, "%02x%02x%02x%02x%02x%02x_%s\0",
 						  appData.macAddress.v[0], appData.macAddress.v[1], appData.macAddress.v[2],
-						  appData.macAddress.v[3], appData.macAddress.v[4], appData.macAddress.v[5]);
+						  appData.macAddress.v[3], appData.macAddress.v[4], appData.macAddress.v[5], appData.user_mqtt_id);
 				connect.client_id = (byte *)clientIdString;
 				XMEMSET(&lwt_msg, 0, sizeof(lwt_msg));
 				connect.lwt_msg = &lwt_msg;
