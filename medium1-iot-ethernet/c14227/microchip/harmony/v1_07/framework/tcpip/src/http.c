@@ -1011,9 +1011,10 @@ static void TCPIP_HTTP_ProcessConnection(HTTP_CONN* pHttpCon)
                 if(pHttpCon->httpStatus == HTTP_REDIRECT)
                 {
                     TCPIP_TCP_StringPut(pHttpCon->socket, pHttpCon->data);
-                    TCPIP_TCP_StringPut(pHttpCon->socket, (const uint8_t*)"\r\n\r\n304 Redirect: ");
-                    TCPIP_TCP_StringPut(pHttpCon->socket, pHttpCon->data);
-                    TCPIP_TCP_StringPut(pHttpCon->socket, (const uint8_t*)HTTP_CRLF);
+                    TCPIP_TCP_StringPut(pHttpCon->socket, (const uint8_t*)"\r\n\r\n");
+                    //TCPIP_TCP_StringPut(pHttpCon->socket, (const uint8_t*)"\r\n\r\n304 Redirect: ");
+                    //TCPIP_TCP_StringPut(pHttpCon->socket, pHttpCon->data);
+                    //TCPIP_TCP_StringPut(pHttpCon->socket, (const uint8_t*)HTTP_CRLF);
                 }
 
                 // If not GET or POST, we're done
