@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<project>                                  
+  <executable name="dist/IoT-Ethernet/production/medium1-iot-ethernet.X.production.elf">                 
+    <memory name="program">                 
+      <units>bytes</units>                 
+      <length>2098304</length>                 
+      <used>769756</used>                     
+      <free>1328548</free>                     
+    </memory>                              
+    <memory name="data">              
+      <units>bytes</units>                 
+      <length>524288</length>                 
+      <used>185668</used>                     
+      <free>338620</free>                     
+    </memory>                              
+  </executable>                            
+</project>                                 

@@ -119,7 +119,11 @@ extern "C" {
     #define NVM_SENSOR_CONFIG_HUMIDITY_CLICK_OFFSET     (2 * sizeof(APP_SENSOR_CONFIG))
     #define NVM_SENSOR_CONFIG_MOTION_CLICK_OFFSET       (3 * sizeof(APP_SENSOR_CONFIG))
     #define NVM_SENSOR_CONFIG_AIR_QUALITY_OFFSET        (4 * sizeof(APP_SENSOR_CONFIG))
-#define NVM_SENSORS_CONFIGURATION_SIZE              (5 * sizeof(APP_SENSOR_CONFIG))
+    #define NVM_SENSOR_CONFIG_LED1_OFFSET               (5 * sizeof(APP_SENSOR_CONFIG))
+    #define NVM_SENSOR_CONFIG_LED2_OFFSET               (6 * sizeof(APP_SENSOR_CONFIG))
+    #define NVM_SENSOR_CONFIG_LED3_OFFSET               (7 * sizeof(APP_SENSOR_CONFIG))
+    #define NVM_SENSOR_CONFIG_LED4_OFFSET               (8 * sizeof(APP_SENSOR_CONFIG))
+#define NVM_SENSORS_CONFIGURATION_SIZE              (9 * sizeof(APP_SENSOR_CONFIG))
 
     
 /* Application Codes */
