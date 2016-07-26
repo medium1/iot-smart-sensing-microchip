@@ -50,6 +50,8 @@ While building the SYS TMR from source, ALWAYS use this file in the build.
 /*  This section lists the other files that are included in this file.
 */
 
+#include <string.h>
+
 #include "system/tmr/src/sys_tmr_local.h"
 
 // *****************************************************************************
