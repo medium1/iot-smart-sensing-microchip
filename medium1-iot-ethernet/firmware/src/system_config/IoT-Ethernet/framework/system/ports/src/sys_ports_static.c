@@ -76,6 +76,9 @@ void SYS_PORTS_Initialize(void)
     PLIB_PORTS_ChannelChangeNoticePullUpEnable(PORTS_ID_0, PORT_CHANNEL_C, SYS_PORT_C_CNPU);
     PLIB_PORTS_ChannelChangeNoticePullDownEnable(PORTS_ID_0, PORT_CHANNEL_C, SYS_PORT_C_CNPD);
     
+    /* fixed false motion detection without sensor installed MO-160 9/13/2016 Fai Cheng */
+	 PLIB_PORTS_ChangeNoticePullDownPerPortEnable( PORTS_ID_0, PORT_CHANNEL_D, PORTS_BIT_POS_11 );
+
     /* PORT E Initialization */
     PLIB_PORTS_OpenDrainEnable(PORTS_ID_0, PORT_CHANNEL_E, SYS_PORT_E_ODC);
     PLIB_PORTS_Write( PORTS_ID_0, PORT_CHANNEL_E,  SYS_PORT_E_LAT);
