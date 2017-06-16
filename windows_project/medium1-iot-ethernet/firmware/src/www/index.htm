@@ -1,0 +1,85 @@
+~inc:header.inc~
+			<div id="title">
+				<h2>
+					IOT Monitoring Kit Configuration
+				</h2>
+				<div>
+					Visit <a href="http://mediumone.com/microchip">mediumone.com/microchip</a> for activation instructions and to learn more
+				</div>
+			</div>
+			<div class="rounded_container" id="network_config">
+				<table>
+					<tr>
+						<td></td>
+						<td></td>
+						<td class="grey_text">&emsp;Current configuration:</td>
+					</tr>
+					<tr>
+						<td class="align_right">Project MQTT ID:</td>
+						<td>
+							<input id="m" type="text" name="m" maxlength="255" class="ssid1" value="">
+						</td>
+						<td class="grey_text">&emsp;~ProjectMQTTID~</td>
+					</tr>
+					<tr>
+						<td class="align_right">User MQTT ID:</td>
+						<td>
+							<input id="u" type="text" name="u" maxlength="255" class="ssid1" value="">
+						</td>
+						<td class="grey_text">&emsp;~UserMQTTID~</td>
+					</tr>
+					<tr>
+						<td class="align_right">API Key:</td>
+						<td>
+							<input id="a" type="text" name="a" maxlength="255" class="ssid1" value="">
+						</td>
+						<td class="grey_text">&emsp;~APIKey~</td>
+					</tr>
+					<tr>
+						<td class="align_right">API Password:</td>
+						<td>
+							<input id="p" type="text" name="p" maxlength="255" class="ssid1" value="">
+						</td>
+						<td class="grey_text">&emsp;~APIPassword~</td>
+					</tr>
+					<tr>
+						<td class="align_right">Device Name:</td>
+						<td>
+							<input id="d" type="text" name="d" maxlength="255" class="ssid1" value="">
+						</td>
+						<td class="grey_text">&emsp;~DeviceName~</td>
+					</tr>
+					<tr>
+						<td class="align_right">Sensor Type:</td>
+						<td>
+							<select id="s" name="s">
+								<option value="none">None</option>
+								<option value="pressure_click">Pressure Click</option>
+								<option value="air_quality_click">Air Quality Click</option>
+								<option value="humidity_click">Humidity Click</option>
+								<option value="motion_click">Motion Click</option>
+							</select>										</td>
+						<td class="grey_text">&emsp;~SensorType~</td>
+					</tr>
+					<tr>
+						<td colspan="2" class="text-right">
+							<input id="joinButton" class="join_button" type="button" value="Connect" onclick="joinNetwork();">
+						</td>
+					</tr>
+				</table>
+			</div>
+			<br>
+			<div class="rounded_container" id="network_status">
+				<iframe scrolling="no" frameborder=0 src="status.htm"></iframe>
+			</div>
+			<form method="post" name="kickoff" action="">
+				<input type="hidden" id="project_mqtt_id" name="project_mqtt_id"></input>
+				<input type="hidden" id="user_mqtt_id" name="user_mqtt_id"></input>
+				<input type="hidden" id="api_key" name="api_key"></input>
+				<input type="hidden" id="api_password" name="api_password"></input>
+				<input type="hidden" id="device_name" name="device_name"></input>
+				<input type="hidden" id="sensor_type" name="sensor_type"></input>
+			</form>
+~inc:footer.inc~
+
+		

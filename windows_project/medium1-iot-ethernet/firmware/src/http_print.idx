@@ -1,0 +1,13 @@
++inc:header.inc
++inc:footer.inc
++ProjectMQTTID
++UserMQTTID
++APIKey
++APIPassword
++DeviceName
++SensorType
++uuid
++localIP
++remoteServer
++remoteIP
++currentStatus
