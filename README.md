@@ -1,5 +1,4 @@
 # MediumOne Microchip IoT Ethernet Monitoring Kit Development
-####                        Developed by Saritasa 2016
 
 ## Introduction
 This kit is designed to provide product designers or IOT enabled companies, a baseline and open reference design. The kit is complete with sensor, embedded, cloud, and mobile app. The kit supports out-of-the-box capabilities for sensors, including enterprise grade security and real-time cloud processing, dashboards, and companion mobile app. For information about ordering the kit & sensors, activate and setup guide, please visit https://mediumone.com/microchip/index.
